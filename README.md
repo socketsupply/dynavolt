@@ -1,8 +1,12 @@
+# SYNOPSIS
+An easy to use dynamodb client.
+
 # USAGE
 
+```js
 const Dynabvolt = require('dynavolt')
 const db = new Datavolt('tablename', { region: 'us-west-2' })
-
+```
 
 ### PUT
 
@@ -19,7 +23,7 @@ const { err, data } = await db.get('foo', 'bar')
 ### QUERY
 
 ```js
-const iterator = table.query('foo', 'b')
+const iterator = db.query(`hash = N(hello) AND begins_with(range, S(fo))`)
 
 for await (const { key, value } of iterator) {
   console.log(key, value)

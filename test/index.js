@@ -23,3 +23,21 @@ const expected = '{"str":{"S":"string"},"int":{"N":1},"float":{"N":1.1},"obja":{
 
 assert(expected === JSON.stringify(j))
 assert(JSON.stringify(o) === JSON.stringify(t.toJSON(j)))
+
+{
+  const expected = JSON.stringify({ ':v1': { N: '100' }, ':v2': { S: 'hello' } })
+  const result = t.queryParser('foo = N(100) AND S(hello)')
+  assert(expected === JSON.stringify(result))
+}
+
+{
+  const expected = JSON.stringify({ ':v1': { N: '1(0)0' } })
+  const result = t.queryParser('foo = N(1(0)0)')
+  assert(expected === JSON.stringify(result))
+}
+
+try {
+  t.queryParser('foo = N(1(00)')
+} catch (err) {
+  assert(err, 'should fail')
+}
