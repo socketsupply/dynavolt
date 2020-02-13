@@ -31,34 +31,15 @@ class Table {
   }
 
   createKeyProperties (hash, range) {
-    if (this._createKeyProperties) {
-      return this._createKeyProperties(hash, range)
+    const o = {
+      [this.hashKey]: { [this.hashType]: hash }
     }
-
-    const schema = this.meta.KeySchema
-    const defs = this.meta.AttributeDefinitions
-
-    this.hashKey = schema[0].AttributeName
-    this.hashType = defs.find(d => d.AttributeName === this.hashKey)
 
     if (range) {
-      this.rangeKey = schema[1].AttributeName
-      this.rangeType = defs.find(d => d.AttributeName === this.rangeKey)
+      o[this.rangeKey] = { [this.rangeType]: range }
     }
 
-    this._createKeyProperties = (hash, range) => {
-      const o = {
-        [this.hashKey]: { [this.hashType]: hash }
-      }
-
-      if (range) {
-        o[this.rangeKey] = { [this.rangeType]: range }
-      }
-
-      return o
-    }
-
-    return this._createKeyProperties(hash, range)
+    return o
   }
 
   toDynamoJSON (original) {

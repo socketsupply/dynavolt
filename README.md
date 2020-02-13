@@ -7,14 +7,17 @@ A nice DynamoDB client.
 const Dynavolt = require('dynavolt')
 ```
 
+## TABLES
+
 ### CREATE
 
 ```js
 const { err, table } = awwait Dynavolt.create('artists')
 ```
 
-<details><summary>Advanced Usage</summary>
+<details><summary><i>ADVANCED USAGE</i></summary>
 <p>
+
 You can also specify `hash`, `range` and `options`.
 
 ```js
@@ -37,7 +40,11 @@ const { err, table } = awwait Dynavolt.create('artists', key, opts)
 const { err, table } = await Dynavolt.open('artists', { region: 'us-west-2' })
 ```
 
+## METHODS
+
 ### PUT
+Dynavolt will automatically (and recursively) deduce the types of your data and
+annotate them correctly, so there is no need to write "dynamodb json".
 
 ```js
 const { err } = await table.put('glen', 'danzig', { height: 'quite-short' })
@@ -46,7 +53,31 @@ const { err } = await table.put('glen', 'danzig', { height: 'quite-short' })
 ### GET
 
 ```js
-const { err, data } = await table.get('henry', 'rollins')
+const { err, data } = await table.get('iggy', 'pop')
+```
+
+### DELETE
+
+```js
+const { err } = await table.delete('henry', 'rollins')
+```
+
+### BATCH WRITE
+
+```js
+const { err } = await table.batchWrite([
+  { put: { hash: 'foo', range: 'bar', ... } },
+  { delete: { hash: 'foo', range: 'bar' } }
+ ])
+```
+
+### BATCH READ
+
+```js
+const { err } = await table.batchRead([
+  { hash: 'foo', range: 'bazz' },
+  { hash: 'beep', range: 'boop' }
+])
 ```
 
 ### QUERY
@@ -61,7 +92,7 @@ for await (const { key, value } of iterator) {
 }
 ```
 
-<details><summary>Advanced Usage</summary>
+<details><summary><i>ADVANCED USAGE</i></summary>
 <p>
 
 You can also chain a [Filter Expression][2] and [Projection Expression][3]
@@ -90,6 +121,24 @@ const iterator = table.scan(`contains(artists.name, S(danzig)`)
 for await (const { key, value } of iterator) {
   console.log(key, value)
 }
+```
+
+### TTL
+Records in your database can be set to expire by specifying a `TTL` attribute
+on your table.
+
+```js
+const { err } = await table.setTTL('stillCool')
+```
+
+Now one minute after adding the following record, it will be removed.
+
+```js
+const opts = {
+  stillCool: 6e4
+}
+
+const { err } = await table.put('brian', 'setzer', { cool: true }, opts)
 ```
 
 [0]:https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.KeyConditionExpressions
