@@ -1,0 +1,192 @@
+<html>
+  <head>
+    <link href="https://fonts.googleapis.com/css?family=Fira+Mono|Heebo:100,700,900|Montserrat&display=swap" rel="stylesheet">
+    <style>
+      * {
+        -webkit-font-smoothing: antialiased;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 1em;
+        width: 50%;
+        margin: auto;
+        margin-top: 300px;
+        max-width: 800px;
+        color: #444;
+      }
+
+      h1, h2, h3, h4 {
+        font-family: 'Heebo', sans-serif;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        font-weight: 900;
+        font-size: 8em;
+        line-height: 1em;
+        margin: 0;
+      }
+
+      h2 {
+        border-top: 4px solid;
+      }
+
+      header {
+        height: 100%;
+        width: 100%;
+      }
+
+      header .centered {
+        position: absolute;
+        top: 45%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-2deg);
+      }
+
+      header .centered img {
+        width: 150px;
+        margin: 24px 40%;
+      }
+
+      header p {
+        font-family: 'Heebo', sans-serif;
+        font-weight: 100;
+        font-size: 24px;
+        margin: 0;
+      }
+
+      main p {
+        margin: 20px 0 40px;
+        line-height: 1.55em;
+      }
+
+      code {
+        font-family: 'Fira Mono', monospace;
+        padding: 10px 24px;
+        display: block;
+        background: #f7f7f7;
+        color: #70838c;
+        overflow: scroll;
+        line-height: 1.5;
+      }
+
+      code i {
+        color: #f44336;
+      }
+
+      a {
+        color: #444;
+        text-decoration: none;
+        transition: all .4s ease;
+        padding-bottom: 2px;
+        border-bottom: 1px solid;
+      }
+
+      a:hover {
+        color: #03A9F4;
+        border-bottom 1px solid #03A9F4;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="centered">
+        <img src="./volt.svg"/>
+        <h1>Dynavolt</h1>
+        <p>A nice DynamoDB library for Node.js</p>
+      </div>
+    </header>
+    <main>
+      <section>
+        <h2>Getting started</h2>
+        <p>
+        <a href="#">DynamoDB</a> is a <a href="#">Key-Value</a> oriented
+          database. Amazon offers a hosted version
+          of it in their cloud. They can back up your data and replicate it
+          accross geographic regions so that it's safe. This library tries
+          to reduce the learning curve associated with using DynamoDB by
+          <b>progressively disclosing</b> features only as you need them.
+        </p>
+
+        <pre>
+        <code>
+npm install @optoolco/<b>dynavolt</b>
+        </code>
+        </pre>
+
+        <h3>Create a table</h3>
+        <p>The first thing you will want to do is create a table to put some
+        data into.
+
+        <pre>
+        <code>
+<b>const</b> Dynavolt = require(<i>'@optoolco/dynavolt'</i>)
+<b>const</b> { err, table } = <b>await</b> Dynavolt.create(<i>'artists'</i>)
+        </code>
+        </pre>
+      </section>
+
+      <section>
+        <h3>Batch Reads</h3>
+        <p>
+          The first thing you will want to do is create a table to put some data into.
+        </p>
+        <pre><code>
+<b>const</b> { err } = <b>await</b> table.batchRead([
+  { hash: <i>'foo'</i>, range: <i>'bazz'</i> },
+  { hash: <i>'beep'</i>, range: <i>'boop'</i> }
+])
+      </code>
+        </pre>
+      </section>
+
+      <section>
+        <h3>Batch Writes</h3>
+        <p>
+          The first thing you will want to do is create a table to put some data into.
+        </p>
+        <pre><code>
+<b>const</b> { err } = <b>await</b> table.batchWrite([
+  { put: { hash: <i>'foo'</i>, range: <i>'bar'</i>, ... } },
+  { delete: { hash: <i>'foo'</i>, range: <i>'bar'</i> } }
+ ])
+      </code>
+        </pre>
+      </section>
+
+      <section>
+        <h3>Queries</h3>
+        <p>
+          <a href="#">DynamoDB</a> is a database. Amazon has a hosted version of
+        </p>
+        <pre><code>
+<b>const</b> itr = table.query(<i>'hash = N(greetings) AND range = S(hello)'</i>)
+
+for <b>await</b> (<b>const</b> { key, value } <b>of</b> itr) {
+  console.log(key, value)
+}
+      </code>
+        </pre>
+      </section>
+
+      <section>
+        <h3>Scans</h3>
+        <p>
+          <a href="#">DynamoDB</a> is a database. Amazon has a hosted version of
+        </p>
+        <pre><code>
+<b>const</b> itr = table.query(<i>`hash = N(greetings) AND begins_with(range, S(hell))`</i>)
+
+for <b>await</b> (const { key, value } <b>of</b> itr) {
+  console.log(key, value)
+}
+      </code>
+        </pre>
+      </section>
+
+    </main>
+  </body>
+</html>
