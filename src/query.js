@@ -7,7 +7,10 @@ exports.queryParser = function (source) {
 
   source = source.slice()
 
-  let variableIndex = 0
+  if (typeof this.variableIndex === 'undefined') {
+    this.variableIndex = 0
+  }
+
   let openStates = 0
   let match = null
   let expression = ''
@@ -17,12 +20,12 @@ exports.queryParser = function (source) {
     match = source.match(TYPED_VARIABLES_RE)
     if (!match) break
 
-    ++variableIndex
+    ++this.variableIndex
     ++openStates
     const index = match.index + match[0].length
     expression += source.slice(0, match.index)
     source = source.slice(index)
-    const name = `:v${variableIndex}`
+    const name = `:v${this.variableIndex}`
     const value = []
 
     while (true) {
@@ -52,16 +55,29 @@ exports.queryParser = function (source) {
 }
 
 exports.query = async function (dsl, opts = {}) {
+  return exports.iterator(dsl, opts, 'query')
+}
+
+exports.scan = async function (dsl, opts = {}) {
+  return exports.iterator(dsl, opts, 'scan')
+}
+
+exports.iterator = async function (dsl, opts = {}, method) {
   const {
-    expression: KeyConditionExpression,
+    expression,
     attributeValues: ExpressionAttributeValues
   } = this.queryParser(dsl)
 
   const params = {
     TableName: this.meta.TableName,
     ExpressionAttributeValues,
-    KeyConditionExpression,
     ...opts
+  }
+
+  if (method === 'query') {
+    params.KeyConditionExpression = expression
+  } else {
+    params.FilterExpression = expression
   }
 
   let values = []
@@ -79,7 +95,10 @@ exports.query = async function (dsl, opts = {}) {
       } = this.queryParser(dsl)
 
       params.FilterExpression = FilterExpression
-      params.ExpressionAttributeValues = ExpressionAttributeValues
+      params.ExpressionAttributeValues = Object.assign(
+        params.ExpressionAttributeValues,
+        ExpressionAttributeValues
+      )
     },
     properties: async dsl => {
       params.ProjectionExpression = dsl
@@ -93,7 +112,7 @@ exports.query = async function (dsl, opts = {}) {
         return { done: true }
       }
 
-      const res = await this.db.query(params).promise()
+      const res = await this.db[method](params).promise()
 
       if (res.Items) {
         values = [...values, ...res.Items.map(item => this.toJSON(item))]
