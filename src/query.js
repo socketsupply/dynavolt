@@ -64,14 +64,14 @@ exports.query = async function (dsl, opts = {}) {
     ...opts
   }
 
+  let values = []
+  let iteratorIndex = 0
+  let isFinished = false
+
   return {
     [Symbol.asyncIterator] () {
       return this
     },
-    //
-    // FilterExpression
-    // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#FilteringResults
-    //
     filter: async dsl => {
       const {
         attributeValues: ExpressionAttributeValues,
@@ -81,23 +81,31 @@ exports.query = async function (dsl, opts = {}) {
       params.FilterExpression = FilterExpression
       params.ExpressionAttributeValues = ExpressionAttributeValues
     },
-    //
-    // ProjectionExpression
-    // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Attributes.html
-    //
     properties: async dsl => {
       params.ProjectionExpression = dsl
     },
     next: async () => {
-      let res = null
-
-      try {
-        res = await this.db.query(params).promise()
-      } catch (err) {
-        throw err
+      if (iteratorIndex < values.length) {
+        return { value: values[iteratorIndex++] }
       }
 
-      return res
+      if (isFinished) {
+        return { done: true }
+      }
+
+      const res = await this.db.query(params).promise()
+
+      if (res.Items) {
+        values = [...values, ...res.Items.map(item => this.toJSON(item))]
+      }
+
+      if (typeof res.LastEvaluatedKey === 'undefined' || params.Limit) {
+        isFinished = true
+      } else {
+        params.ExclusiveStartKey = res.LastEvaluatedKey
+      }
+
+      return { value: values[iteratorIndex++] }
     }
   }
 }
