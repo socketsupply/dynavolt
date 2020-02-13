@@ -1,23 +1,52 @@
 # SYNOPSIS
-An easy to use dynamodb client.
+A nice DynamoDB client.
 
 # USAGE
 
 ```js
-const Dynabvolt = require('dynavolt')
-const db = new Datavolt('tablename', { region: 'us-west-2' })
+const Dynavolt = require('dynavolt')
+```
+
+### CREATE
+
+```js
+const { err, table } = awwait Dynavolt.create('artists')
+```
+
+<details><summary>Advanced Usage</summary>
+<p>
+You can also specify `hash`, `range` and `options`.
+
+```js
+const key = { hash: 'genres', range: 'artists' }
+
+const opts = { TimeToLiveSpecification: {
+  AttributeName: 'ttl',
+  Enabled: true
+}
+
+const { err, table } = awwait Dynavolt.create('artists', key, opts)
+```
+
+</p>
+</details>
+
+### OPEN
+
+```js
+const { err, table } = await Dynavolt.open('artists', { region: 'us-west-2' })
 ```
 
 ### PUT
 
 ```js
-const { err } = await db.put('foo', 'bar', { beep: 'boop', quxx: 42 })
+const { err } = await table.put('glen', 'danzig', { height: 'quite-short' })
 ```
 
 ### GET
 
 ```js
-const { err, data } = await db.get('foo', 'bar')
+const { err, data } = await table.get('henry', 'rollins')
 ```
 
 ### QUERY
@@ -25,18 +54,21 @@ Query takes a [Key Condition Expression][0]. For syntax refernece see the
 [Comparison Operator and Function Reference][1].
 
 ```js
-const iterator = db.query(`hash = N(greetings) AND begins_with(range, S(hell))`)
+const iterator = table.query(`hash = N(greetings) AND begins_with(range, S(hell))`)
 
 for await (const { key, value } of iterator) {
   console.log(key, value)
 }
 ```
 
+<details><summary>Advanced Usage</summary>
+<p>
+
 You can also chain a [Filter Expression][2] and [Projection Expression][3]
 clauses onto querties. More info about Projection Expression syntax [here][4].
 
 ```js
-const iterator = db
+const iterator = table
   .query(`hash = N(songs) AND begins_with(range, S(moth))`)
   .filter(`contains(artists.name, S(danzig)`)
   .properties('artists.weight', 'artists.height')
@@ -46,18 +78,19 @@ for await (const { key, value } of iterator) {
 }
 ```
 
+</p>
+</details>
+
 ### SCAN
 Scan takes a [Filter Expression][2].
 
 ```js
-const iterator = db.scan(`contains(artists.name, S(danzig)`)
+const iterator = table.scan(`contains(artists.name, S(danzig)`)
 
 for await (const { key, value } of iterator) {
   console.log(key, value)
 }
 ```
-
-
 
 [0]:https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.KeyConditionExpressions
 [1]:https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.OperatorsAndFunctions.html
