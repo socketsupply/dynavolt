@@ -10,7 +10,8 @@ exports.queryParser = function (source) {
   let variableIndex = 0
   let openStates = 0
   let match = null
-  const ExpressionAttributeValues = {}
+  let expression = ''
+  const attributeValues = {}
 
   while (source.length) {
     match = source.match(TYPED_VARIABLES_RE)
@@ -18,7 +19,9 @@ exports.queryParser = function (source) {
 
     ++variableIndex
     ++openStates
-    source = source.slice(match.index + match[0].length)
+    const index = match.index + match[0].length
+    expression += source.slice(0, match.index)
+    source = source.slice(index)
     const name = `:v${variableIndex}`
     const value = []
 
@@ -38,32 +41,52 @@ exports.queryParser = function (source) {
       }
     }
 
+    expression += name
     const type = match[1]
-    ExpressionAttributeValues[name] = { [type]: value.join('') }
+    attributeValues[name] = { [type]: value.join('') }
   }
 
-  return ExpressionAttributeValues
+  expression += source
+
+  return { attributeValues, expression }
 }
 
 exports.query = async function (dsl, opts = {}) {
-  //
-  // ProjectionExpression
-  // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Attributes.html
-  //
+  const {
+    expression: KeyConditionExpression,
+    attributeValues: ExpressionAttributeValues
+  } = this.queryParser(dsl)
 
-  //
-  // FilterExpression
-  // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#FilteringResults
-  //
   const params = {
     TableName: this.meta.TableName,
-    ExpressionAttributeValues: this.queryParser(dsl),
+    ExpressionAttributeValues,
+    KeyConditionExpression,
     ...opts
   }
 
   return {
     [Symbol.asyncIterator] () {
       return this
+    },
+    //
+    // FilterExpression
+    // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#FilteringResults
+    //
+    filter: async dsl => {
+      const {
+        attributeValues: ExpressionAttributeValues,
+        expression: FilterExpression
+      } = this.queryParser(dsl)
+
+      params.FilterExpression = FilterExpression
+      params.ExpressionAttributeValues = ExpressionAttributeValues
+    },
+    //
+    // ProjectionExpression
+    // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Attributes.html
+    //
+    properties: async dsl => {
+      params.ProjectionExpression = dsl
     },
     next: async () => {
       let res = null

@@ -21,9 +21,15 @@ const { err, data } = await db.get('foo', 'bar')
 ```
 
 ### QUERY
+Query takes a [KeyConditionExpression][0]. For syntax refernece see the
+[Comparison Operator and Function Reference][1]. You can also chain `filter`
+and `properties` clauses.
 
 ```js
-const iterator = db.query(`hash = N(hello) AND begins_with(range, S(fo))`)
+const iterator = db
+  .query(`hash = N(greetings) AND begins_with(range, S(hell))`)
+  .filter(`contains(singers.lastName, S(danzig)`)
+  .properties('foo', 'bar')
 
 for await (const { key, value } of iterator) {
   console.log(key, value)
@@ -31,11 +37,16 @@ for await (const { key, value } of iterator) {
 ```
 
 ### SCAN
+Scan takes a [Filter Expression][2].
 
 ```js
-const iterator = table.scan('foo', 'bar')
+const iterator = db.scan(`contains(singers.lastName, S(danzig)`)
 
 for await (const { key, value } of iterator) {
   console.log(key, value)
 }
 ```
+
+[0]:https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.KeyConditionExpressions
+[1]:https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.OperatorsAndFunctions.html
+[2]:https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.FilterExpression

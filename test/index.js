@@ -26,14 +26,16 @@ assert(JSON.stringify(o) === JSON.stringify(t.toJSON(j)))
 
 {
   const expected = JSON.stringify({ ':v1': { N: '100' }, ':v2': { S: 'hello' } })
-  const result = t.queryParser('foo = N(100) AND S(hello)')
-  assert(expected === JSON.stringify(result))
+  const { expression, attributeValues } = t.queryParser('foo = N(100) AND S(hello)')
+  assert(expected === JSON.stringify(attributeValues))
+  assert(expression === 'foo = :v1 AND :v2')
 }
 
 {
   const expected = JSON.stringify({ ':v1': { N: '1(0)0' } })
-  const result = t.queryParser('foo = N(1(0)0)')
-  assert(expected === JSON.stringify(result))
+  const { expression, attributeValues } = t.queryParser('foo = N(1(0)0)')
+  assert(expected === JSON.stringify(attributeValues))
+  assert(expression === 'foo = :v1')
 }
 
 try {
