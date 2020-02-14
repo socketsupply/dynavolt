@@ -34,6 +34,10 @@
         border-top: 4px solid;
       }
 
+      h3 {
+        margin-top: 64px;
+      }
+
       header {
         height: 100%;
         width: 100%;
@@ -41,7 +45,7 @@
 
       header .centered {
         position: absolute;
-        top: 45%;
+        top: 43%;
         left: 50%;
         transform: translate(-50%, -50%) rotate(-2deg);
       }
@@ -58,8 +62,12 @@
         margin: 0;
       }
 
+      main {
+        padding-bottom: 150px;
+      }
+
       main p {
-        margin: 20px 0 40px;
+        margin: 20px 0;
         line-height: 1.55em;
       }
 
@@ -73,8 +81,8 @@
         line-height: 1.5;
       }
 
-      code i {
-        color: #f44336;
+      i {
+        color: #36a4f4;
       }
 
       a {
@@ -104,87 +112,168 @@
         <h2>Getting started</h2>
         <p>
         <a href="#">DynamoDB</a> is a <a href="#">Key-Value</a> oriented
-          database. Amazon offers a hosted version
-          of it in their cloud. They can back up your data and replicate it
-          accross geographic regions so that it's safe. This library tries
-          to reduce the learning curve associated with using DynamoDB by
-          <b>progressively disclosing</b> features only as you need them.
+          database. This library tries to reduce the learning curve associated
+          with using DynamoDB by <b>progressively disclosing</b> features only
+          as you need them.
         </p>
 
         <pre>
         <code>
 npm install @optoolco/<b>dynavolt</b>
-        </code>
-        </pre>
-
-        <h3>Create a table</h3>
-        <p>The first thing you will want to do is create a table to put some
-        data into.
+        </code></pre>
 
         <pre>
         <code>
+<b>const</b> AWS = require(<i>'aws-sdk'</i>)
 <b>const</b> Dynavolt = require(<i>'@optoolco/dynavolt'</i>)
-<b>const</b> { err, table } = <b>await</b> Dynavolt.create(<i>'artists'</i>)
-        </code>
-        </pre>
+<b>const</b> db = new Dynavolt(AWS, { region: <i>'us-east-1'</i> })
+        </code></pre>
+
+        <h3>Create and open a table</h3>
+        <p>As an example, let's create a table to store all the cities in the US
+        in a way that makes it easy to look them up by state.
+        </p>
+        <pre>
+        <code>
+<b>const</b> { err: errCreate } = <b>await</b> db.create(<i>'cities'</i>)
+<b>const</b> { err: errOpen, table } = <b>await</b> db.open(<i>'cities'</i>)
+        </code></pre>
       </section>
 
       <section>
-        <h3>Batch Reads</h3>
+        <h3>Putting data in the database</h3>
+        <p> 
+        A key has two parts (although the second is optional). Usually keys are
+        strings (but you can use <a href="#">other data types</a> too). The
+        first part is called the <b>partition</b> key, you can think of this as
+        a way to group your data. The second part is called the <b>range</b>
+        key, and it should be unique.
+
         <p>
-          The first thing you will want to do is create a table to put some data into.
+        The idea is to uniquely identify the value you're about to save
+        and organize it such a way that it's not too slow to look up later.
+
+        <p>
+        City names are not all unqie, so for our example we will use <i>states
+        </i> as our <b>partition</b> key and <i>cities</i> as our
+        <b>range</b> key. This will later allow us to easily and quickly get all
+        cities by state.
+
         </p>
         <pre><code>
-<b>const</b> { err } = <b>await</b> table.batchRead([
-  { hash: <i>'foo'</i>, range: <i>'bazz'</i> },
-  { hash: <i>'beep'</i>, range: <i>'boop'</i> }
-])
-      </code>
-        </pre>
+<b>const</b> { err } = <b>await</b> table.put(<i>'oregon'</i>, <i>'salem'</i>, { founded: <i>1842</i> })
+        </code></pre>
+      </section>
+
+      <section>
+        <h3>Getting data out of the database</h3>
+        <p>
+          To get a single value, the value we just put into the database we use
+          the <b>get</b> method.
+        </p>
+        <pre><code>
+<b>const</b> { err, data } = <b>await</b> table.get(<i>'oregon'</i>, <i>'salem'</i>)
+        </code></pre>
+
+        <p>
+          The <b>data</b> property returned by the get function will contain the
+          following value...
+        </p>
+        <pre><code>
+{ founded: <i>1842</i> }
+        </code></pre>
+      </section>
+
+      <section>
+        <h3>Updating data</h3>
+        <p>
+          Updating a value allows your to add new properties to a value or
+          overwrite old ones.
+        </p>
+        <pre><code>
+<b>const</b> value = { elevation: <i>46.7</i> }
+
+<b>const</b> { err, data } = <b>await</b> table.update(<i>'oregon'</i>, <i>'salem'</i>, value)
+        </code></pre>
+
+        <p>
+          Now the key contains the following value
+        </p>       
+        <pre><code>
+{ founded: <i>1842</i> elevation: <i>46.7</i> }
+        </code></pre>
       </section>
 
       <section>
         <h3>Batch Writes</h3>
         <p>
-          The first thing you will want to do is create a table to put some data into.
+          Putting new data in the database or deleting it is considered a write.
+          This is useful to reduce the total number of operations you do and the
+          time spent on the network.
+
+        <p>
+          Each object in the array of keys, if a value is not provided, the key
+          and the value will be deleted.
         </p>
         <pre><code>
 <b>const</b> { err } = <b>await</b> table.batchWrite([
-  { put: { hash: <i>'foo'</i>, range: <i>'bar'</i>, ... } },
-  { delete: { hash: <i>'foo'</i>, range: <i>'bar'</i> } }
- ])
-      </code>
-        </pre>
+  [<i>'oregon'</i>, <i>'portland'</i>, { donuts: true }],
+  [<i>'california'</i>, <i>'san francisco'</i>]
+])
+        </code></pre>
+      </section>
+
+      <section>
+        <h3>Batch Reads</h3>
+        <p>
+          Produces an array of objects, each object will contain the key and
+          value.
+        </p>
+        <pre><code>
+<b>const</b> { err, values } = <b>await</b> table.batchRead([
+  [<i>'foo'</i>, <i>'bazz'</i>],
+  [<i>'beep'</i>, <i>'boop'</i>]
+])
+      </code></pre>
       </section>
 
       <section>
         <h3>Queries</h3>
         <p>
-          <a href="#">DynamoDB</a> is a database. Amazon has a hosted version of
+          A query allows you to search for more than one record. 
         </p>
         <pre><code>
-<b>const</b> itr = table.query(<i>'hash = N(greetings) AND range = S(hello)'</i>)
+<b>const</b> q = <i>'hash = N(oregon) AND range = begins_with(range, S(ad))'</i>
 
-for <b>await</b> (<b>const</b> { key, value } <b>of</b> itr) {
+for <b>await</b> (<b>const</b> { key, value } <b>of</b> table.query(q)) {
   console.log(key, value)
 }
-      </code>
-        </pre>
+      </code></pre>
+        <p>
+        DyanmoDB keys are sorted, so the query will 
+        <p>
+      <pre><code>
+[
+  [<i>'oregon'</i>, <i>'adams'</i>, { ... }]
+  [<i>'oregon'</i>, <i>'adrian'</i>, { ... }]
+  ...
+]
+      </code></pre>
+
       </section>
 
       <section>
         <h3>Scans</h3>
         <p>
-          <a href="#">DynamoDB</a> is a database. Amazon has a hosted version of
+          When you don't know much about the records your searching for
         </p>
         <pre><code>
 <b>const</b> itr = table.query(<i>`hash = N(greetings) AND begins_with(range, S(hell))`</i>)
 
-for <b>await</b> (const { key, value } <b>of</b> itr) {
+for <b>await</b> (<b>const</b> { key, value } <b>of</b> itr) {
   console.log(key, value)
 }
-      </code>
-        </pre>
+      </code></pre>
       </section>
 
     </main>

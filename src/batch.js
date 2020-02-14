@@ -1,23 +1,13 @@
 exports.batchWrite = async function (batch, opts = {}) {
-  const ops = batch.map(op => {
-    const Value = op.put || op.delete
-
-    const {
-      [this.hashKey]: hash,
-      [this.rangeKey]: range
-    } = Value
-
+  const ops = batch.map(({ 0: hash, 2: range, 3: value }) => {
     const Key = this.createKeyProperties(hash, range)
 
-    if (op.put) {
-      delete Value[this.hashKey]
-      delete Value[this.rangeKey]
-
+    if (value) {
       return {
         PutRequest: {
           Item: {
             ...Key,
-            ...this.toDynamoJSON(Value)
+            ...this.toDynamoJSON(value)
           }
         }
       }
@@ -47,18 +37,11 @@ exports.batchWrite = async function (batch, opts = {}) {
 }
 
 exports.batchRead = async function (batch, opts = {}) {
-  const ops = batch.map(op => {
-    const {
-      [this.hashKey]: hash,
-      [this.rangeKey]: range
-    } = op
-
-    return this.createKeyProperties(hash, range)
-  })
-
   const params = {
     RequestItems: {
-      [this.meta.TableName]: ops
+      [this.meta.TableName]: batch.map(({ 0: hash, 1: range }) => {
+        return this.createKeyProperties(hash, range)
+      })
     },
     ...opts
   }

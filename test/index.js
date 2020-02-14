@@ -1,7 +1,7 @@
-const Table = require('../src')
+const D = require('../src')
 const assert = require('assert')
 
-const t = new Table({ DynamoDB: function () {} })
+const t = new D({ DynamoDB: function () {} })
 
 const o = {
   str: 'string',

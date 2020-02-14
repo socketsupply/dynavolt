@@ -115,7 +115,13 @@ exports.iterator = async function (dsl, opts = {}, method) {
       const res = await this.db[method](params).promise()
 
       if (res.Items) {
-        values = [...values, ...res.Items.map(item => this.toJSON(item))]
+        const restructured = res.Items.map(item => {
+          delete item[this.hashKey]
+          delete item[this.rangeKey]
+          return [this.hashKey, this.rangeKey, this.toJSON(item)]
+        })
+
+        values = [...values, ...restructured]
       }
 
       if (typeof res.LastEvaluatedKey === 'undefined' || params.Limit) {
