@@ -18,5 +18,9 @@
   "bugs": {
     "url": "https://github.com/optoolco/dynavolt/issues"
   },
-  "homepage": "https://github.com/optoolco/dynavolt#readme"
+  "homepage": "https://github.com/optoolco/dynavolt#readme",
+  "devDependencies": {
+    "aws-sdk": "^2.618.0",
+    "tape": "^4.13.0"
+  }
 }

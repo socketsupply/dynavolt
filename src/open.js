@@ -1,33 +1,32 @@
 const assert = require('assert')
+const { Table } = require('./table')
 
 exports.open = async function (TableName, opts = {}) {
   assert(TableName, 'a table name parameter is required')
 
-  if (this.meta.TableName) {
-    return { table: this } // the table is already "open".
+  if (this.tables[TableName]) {
+    return { table: this.tables[TableName] } // the table is already "open".
   }
 
-  this.meta.TableName = TableName
+  const table = this.tables[TableName] = new Table(this.AWS, this.opts, opts)
 
-  const schema = this.meta.KeySchema
-  const defs = this.meta.AttributeDefinitions
+  const schema = table.meta.KeySchema
+  const defs = table.meta.AttributeDefinitions
 
-  this.hashKey = schema[0].AttributeName
-  this.hashType = defs.find(d => d.AttributeName === this.hashKey)
+  table.hashKey = schema[0].AttributeName
+  table.hashType = defs.find(d => d.AttributeName === table.hashKey)
 
   if (schema[1]) {
-    this.rangeKey = schema[1].AttributeName
-    this.rangeType = defs.find(d => d.AttributeName === this.rangeKey)
+    table.rangeKey = schema[1].AttributeName
+    table.rangeType = defs.find(d => d.AttributeName === table.rangeKey)
   }
 
   try {
-    const t = await this.db.describeTable({ TableName }).promise()
-    this.meta = t.Table
-
-    if (t.Table.TableStatus === 'ACTIVE') {
-      return { table: this }
-    }
+    const { Table } = await this.db.describeTable({ TableName }).promise()
+    table.meta = Table
   } catch (err) {
     return { err }
   }
+
+  return { table }
 }

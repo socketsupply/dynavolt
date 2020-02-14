@@ -73,10 +73,15 @@
 
       code {
         font-family: 'Fira Mono', monospace;
-        padding: 10px 24px;
-        display: block;
         background: #f7f7f7;
         color: #70838c;
+        display: inline-block;
+        padding: 4px;
+      }
+
+      pre code {
+        padding: 10px 24px;
+        display: block;
         overflow: scroll;
         line-height: 1.5;
       }
@@ -140,30 +145,34 @@ npm install @optoolco/<b>dynavolt</b>
         </code></pre>
       </section>
 
+
+
+
       <section>
         <h3>Putting data in the database</h3>
         <p> 
-        A key has two parts (although the second is optional). Usually keys are
-        strings (but you can use <a href="#">other data types</a> too). The
-        first part is called the <b>partition</b> key, you can think of this as
-        a way to group your data. The second part is called the <b>range</b>
-        key, and it should be unique.
+        A key has two parts. Usually parts are strings (but you can use
+        <a href="#">other data types</a> too). The first part is called the
+        <b>hash</b> key, you can think of this as a way to partition your data.
+        The second part is called the <b>range</b> key, and it should be unique.
 
         <p>
         The idea is to uniquely identify the value you're about to save
         and organize it such a way that it's not too slow to look up later.
 
         <p>
-        City names are not all unqie, so for our example we will use <i>states
-        </i> as our <b>partition</b> key and <i>cities</i> as our
-        <b>range</b> key. This will later allow us to easily and quickly get all
-        cities by state.
+        In our example, city names are not all unqie, so we will use <i>states
+        </i> as our <b>hash</b> key and <i>cities</i> as our <b>range</b> key.
+        This will later allow us to easily and quickly get all cities by state.
 
         </p>
         <pre><code>
 <b>const</b> { err } = <b>await</b> table.put(<i>'oregon'</i>, <i>'salem'</i>, { founded: <i>1842</i> })
         </code></pre>
       </section>
+
+
+
 
       <section>
         <h3>Getting data out of the database</h3>
@@ -183,6 +192,9 @@ npm install @optoolco/<b>dynavolt</b>
 { founded: <i>1842</i> }
         </code></pre>
       </section>
+
+
+
 
       <section>
         <h3>Updating data</h3>
@@ -204,6 +216,9 @@ npm install @optoolco/<b>dynavolt</b>
         </code></pre>
       </section>
 
+
+
+
       <section>
         <h3>Batch Writes</h3>
         <p>
@@ -223,6 +238,9 @@ npm install @optoolco/<b>dynavolt</b>
         </code></pre>
       </section>
 
+
+
+
       <section>
         <h3>Batch Reads</h3>
         <p>
@@ -237,20 +255,23 @@ npm install @optoolco/<b>dynavolt</b>
       </code></pre>
       </section>
 
+
+
+
       <section>
         <h3>Queries</h3>
         <p>
-          A query allows you to search for more than one record. 
+          A query will return a range of records.
         </p>
         <pre><code>
-<b>const</b> q = <i>'hash = N(oregon) AND range = begins_with(range, S(ad))'</i>
+<b>const</b> q = <i>'hash = S(oregon) AND range = begins_with(range, S(ad))'</i>
 
 for <b>await</b> (<b>const</b> { key, value } <b>of</b> table.query(q)) {
   console.log(key, value)
 }
       </code></pre>
         <p>
-        DyanmoDB keys are sorted, so the query will 
+        DyanmoDB keys are sorted, so the query will produce a set like this...
         <p>
       <pre><code>
 [
@@ -259,18 +280,51 @@ for <b>await</b> (<b>const</b> { key, value } <b>of</b> table.query(q)) {
   ...
 ]
       </code></pre>
-
+      <p>
+      Dynavolt automatically names, stores and annotates the types of the
+      values in your query. That's the only difference from native DynamoDB
+      <a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ConditionExpressions.html">condition expression</a> syntax.
+      <p>
+      To better understand this query, let's take it apart. There are two
+      conditions. The first condition states that the <b>hash</b> of the key
+      must be equal to a string with the value <i>oregon</i>.
+      </p>
+      <pre>
+      <code>
+hash = S(oregon)
+      </code></pre>
+      The second condition states that the <b>range</b> of the key
+      must begin with a string that has the value <i>ad</i>.
+      </p>
+      <pre>
+      <code>
+range = begins_with(range, S(ad))
+      </code>
+      </pre>
+      <p>
+      The conditions are seperated by the <b>AND</b> operator. And the second
+      condition uses a the <b>begins_with</b> function.
+      <p>
+      For more information about query operators and functions check out
+      <a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.OperatorsAndFunctions.html">this</a> link.
       </section>
+
+
+
 
       <section>
         <h3>Scans</h3>
         <p>
-          When you don't know much about the records your searching for
+          A scan visits each record in the database and checks if it matches
+          a condition to determine if it will be returned in the results.
+
+          This can be expensive but sometimes it can be useful, for example
+          when you don't know much about the records you are searching.
         </p>
         <pre><code>
-<b>const</b> itr = table.query(<i>`hash = N(greetings) AND begins_with(range, S(hell))`</i>)
+<b>const</b> q = <i>'hash = S(oregon) AND founded > 1900'</i>
 
-for <b>await</b> (<b>const</b> { key, value } <b>of</b> itr) {
+for <b>await</b> (<b>const</b> { key, value } <b>of</b> table.query(q)) {
   console.log(key, value)
 }
       </code></pre>
