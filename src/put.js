@@ -13,7 +13,10 @@ exports.put = async function (hash, range, props = {}) {
  
   try {
     await this.db.putItem(params).promise()
-  } catch (err) {
+  } catch (ex) {
+    const err = new Error(ex.message)
     return { err }
   }
+
+  return {}
 }

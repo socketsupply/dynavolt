@@ -1,7 +1,5 @@
-const { Table } = require('../src/table')
+const { queryParser, toJSON, toDynamoJSON } = require('../src/util')
 const test = require('tape')
-
-const table = new Table({ DynamoDB: function () {} })
 
 test('create dynamo json from regular json', t => {
   const o = {
@@ -18,18 +16,18 @@ test('create dynamo json from regular json', t => {
     }
   }
 
-  const j = table.toDynamoJSON(o)
+  const j = toDynamoJSON(o)
 
   const expected = '{"str":{"S":"string"},"int":{"N":1},"float":{"N":1.1},"obja":{"M":{"objb":{"M":{"str":{"S":"str"},"int":{"N":1}}},"arr":{"NS":[{"S":"str"}]},"ab":{"BS":[{"B":{"type":"Buffer","data":[0]}}]}}}}'
 
   t.ok(expected === JSON.stringify(j))
-  t.ok(JSON.stringify(o) === JSON.stringify(table.toJSON(j)))
+  t.ok(JSON.stringify(o) === JSON.stringify(toJSON(j)))
   t.end()
 })
 
 test('convert dsl to dynamo expression and extract expression attribute values', t => {
   const expected = JSON.stringify({ ':v1': { N: '100' }, ':v2': { S: 'hello' } })
-  const { expression, attributeValues } = table.queryParser('foo = N(100) AND S(hello)')
+  const { expression, attributeValues } = queryParser('foo = N(100) AND S(hello)')
   t.ok(expected === JSON.stringify(attributeValues))
   t.ok(expression === 'foo = :v1 AND :v2')
   t.end()
@@ -37,7 +35,7 @@ test('convert dsl to dynamo expression and extract expression attribute values',
 
 test('same as last test but tests nesting of parens', t => {
   const expected = JSON.stringify({ ':v3': { N: '1(0)0' } })
-  const { expression, attributeValues } = table.queryParser('foo = N(1(0)0)')
+  const { expression, attributeValues } = queryParser('foo = N(1(0)0)')
   t.ok(expected === JSON.stringify(attributeValues))
   t.ok(expression === 'foo = :v3')
   t.end()
@@ -45,7 +43,7 @@ test('same as last test but tests nesting of parens', t => {
 
 test('unmatched params should throw', t => {
   try {
-    t.queryParser('foo = N(1(00)')
+    queryParser('foo = N(1(00)')
   } catch (err) {
     t.ok(err, 'should fail')
     t.end()

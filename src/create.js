@@ -1,14 +1,19 @@
 const assert = require('assert')
 const sleep = n => new Promise(resolve => setTimeout(resolve, n))
+const { getDynamoDataType } = require('./util')
 
-exports.create = async function (TableName, { hash = 'key', range = 'range' }, opts = {}) {
+exports.create = async function (
+  TableName, hash = 'hash',
+  range = 'range',
+  opts = {}
+) {
   assert(TableName, 'a table name parameter is required')
 
   const params = {
     TableName,
     AttributeDefinitions: [{
       AttributeName: hash,
-      AttributeType: this.getDynamoDataType(hash)
+      AttributeType: getDynamoDataType(hash)
     }],
     KeySchema: [{
       AttributeName: hash,
@@ -17,9 +22,9 @@ exports.create = async function (TableName, { hash = 'key', range = 'range' }, o
   }
 
   if (range) {
-    params.AttributeName.push({
+    params.AttributeDefinitions.push({
       AttributeName: range,
-      AttributeType: this.getDynamoDataType(range)
+      AttributeType: getDynamoDataType(range)
     })
 
     params.KeySchema.push({
@@ -60,7 +65,6 @@ exports.create = async function (TableName, { hash = 'key', range = 'range' }, o
     if (data.Table.TableStatus !== 'ACTIVE') {
       await sleep(2e3)
     } else {
-      this.meta = data.Table
       break
     }
   }
