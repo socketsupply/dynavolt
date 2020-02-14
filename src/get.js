@@ -18,7 +18,7 @@ exports.get = async function (hash, range, opts = {}) {
   }
 
   if (!data.Item) {
-    return {}
+    return { err: { notFound: true } }
   }
 
   return { data: this.toJSON(data.Item) }

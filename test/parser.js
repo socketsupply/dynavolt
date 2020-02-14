@@ -13,12 +13,13 @@ test('create dynamo json from regular json', t => {
       },
       arr: ['str'],
       ab: [Buffer.alloc(1)]
-    }
+    },
+    no: false,
+    yes: true
   }
 
   const j = toDynamoJSON(o)
-
-  const expected = '{"str":{"S":"string"},"int":{"N":1},"float":{"N":1.1},"obja":{"M":{"objb":{"M":{"str":{"S":"str"},"int":{"N":1}}},"arr":{"NS":[{"S":"str"}]},"ab":{"BS":[{"B":{"type":"Buffer","data":[0]}}]}}}}'
+  const expected = '{"str":{"S":"string"},"int":{"N":1},"float":{"N":1.1},"obja":{"M":{"objb":{"M":{"str":{"S":"str"},"int":{"N":1}}},"arr":{"NS":[{"S":"str"}]},"ab":{"BS":[{"B":{"type":"Buffer","data":[0]}}]}}},"no":{"BOOL":false},"yes":{"BOOL":true}}'
 
   t.ok(expected === JSON.stringify(j))
   t.ok(JSON.stringify(o) === JSON.stringify(toJSON(j)))

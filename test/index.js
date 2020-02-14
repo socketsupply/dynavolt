@@ -64,16 +64,28 @@ test('put', async t => {
 
 test('get', async t => {
   const { err, data } = await table.get('oregon', 'salem')
+  console.log('SALEN', data)
 
   t.ok(!err, err && err.message)
   t.ok(data.donuts === true, 'there are donuts in salem oregon')
   t.end()
 })
 
+test('update a value', async t => {
+  const { err: errUpdate } = await table.update('oregon', 'salem', 'SET $(donuts) = BOOL(false)')
+  t.ok(!errUpdate, errUpdate && errUpdate.message)
+
+  const { err: errGet, data } = await table.get('oregon', 'salem')
+  console.log('SALEN?', data)
+  t.ok(!errGet, errGet && errGet.message)
+  t.ok(data.donuts === false, 'there are donuts in salem oregon')
+  t.end()
+})
+
 test('get a value that does not exist', async t => {
   const { err, data } = await table.get('oregon', 'witches')
 
-  t.ok(!err, 'no error')
+  t.ok(err.notFound, 'not found')
   t.ok(!data, 'there are not witches in oregon')
   t.end()
 })
@@ -93,10 +105,17 @@ test('delete and verify its been remove', async t => {
 
   {
     const { err, data } = await table.get('oregon', 'salem')
-    t.ok(!err)
+    t.ok(err.notFound)
     t.ok(!data)
     t.end()
   }
 })
+
+test('delete a key that does not exist', async t => {
+  const { err } = await table.get('foo', 'bar')
+  t.ok(err.notFound)
+  t.end()
+})
+
 
 test('remote teardown', reset)

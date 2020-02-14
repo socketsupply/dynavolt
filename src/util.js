@@ -1,5 +1,5 @@
 const TYPE_RE = /\[object (\w+)\]/
-const TYPED_VARIABLES_RE = /(B|BOOL|BS|L|M|N|NS|NULL|S|SS)\(/
+const TYPED_VARIABLES_RE = /(B|BOOL|BS|L|M|N|NS|NULL|S|SS|\$)\(/
 
 function getDataType (v) {
   return Object.prototype.toString.call(v).match(TYPE_RE)[1]
@@ -60,6 +60,13 @@ function toJSON (o) {
   return convert(o)
 }
 
+function recast (type, value) {
+  switch (type) {
+    case 'BOOL': return value === 'true'
+    default: return value
+  }
+}
+
 function queryParser (source) {
   if (!source.match(TYPED_VARIABLES_RE)) {
     return source // has no typed variables
@@ -75,6 +82,7 @@ function queryParser (source) {
   let match = null
   let expression = ''
   const attributeValues = {}
+  const attributeNames = {}
 
   while (source.length) {
     match = source.match(TYPED_VARIABLES_RE)
@@ -82,11 +90,16 @@ function queryParser (source) {
 
     ++queryParser.variableIndex
     ++openStates
+
     const index = match.index + match[0].length
+    const type = match[1]
+    const isVariable = type === '$'
+    const symbol = isVariable ? '#' : ':'
+    const name = `${symbol}v${queryParser.variableIndex}`
+    const value = []
+
     expression += source.slice(0, match.index)
     source = source.slice(index)
-    const name = `:v${queryParser.variableIndex}`
-    const value = []
 
     while (true) {
       const ch = source[0]
@@ -105,13 +118,17 @@ function queryParser (source) {
     }
 
     expression += name
-    const type = match[1]
-    attributeValues[name] = { [type]: value.join('') }
+
+    if (isVariable) {
+      attributeNames[name] = value.join('')
+    } else {
+      attributeValues[name] = { [type]: recast(type, value.join('')) }
+    }
   }
 
   expression += source
 
-  return { attributeValues, expression }
+  return { attributeValues, attributeNames, expression }
 }
 
 module.exports = {

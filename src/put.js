@@ -1,5 +1,6 @@
 exports.put = async function (hash, range, props = {}, opts = {}) {
   if (typeof range !== 'string') {
+    opts = props || {}
     props = range || {}
   }
 
