@@ -50,6 +50,14 @@ annotate them correctly, so there is no need to write "dynamodb json".
 const { err } = await table.put('glen', 'danzig', { height: 'quite-short' })
 ```
 
+### PUT IF NOT EXISTS
+Dynavolt will automatically (and recursively) deduce the types of your data and
+annotate them correctly, so there is no need to write "dynamodb json".
+
+```js
+const { err } = await table.put('glen', 'danzig', { height: 'quite-short' })
+```
+
 ### GET
 
 ```js

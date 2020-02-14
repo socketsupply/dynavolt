@@ -1,4 +1,4 @@
-exports.put = async function (hash, range, props = {}) {
+exports.put = async function (hash, range, props = {}, opts = {}) {
   if (typeof range !== 'string') {
     props = range || {}
   }
@@ -8,7 +8,8 @@ exports.put = async function (hash, range, props = {}) {
       ...this.createKeyProperties(hash, range),
       ...this.disableATD ? props : this.toDynamoJSON(props)
     },
-    TableName: this.meta.TableName
+    TableName: this.meta.TableName,
+    ...opts
   }
  
   try {
@@ -19,4 +20,15 @@ exports.put = async function (hash, range, props = {}) {
   }
 
   return {}
+}
+
+exports.putNew = async function (hash, range, props = {}, opts = {}) {
+  const condition = [`attribute_not_exists(${this.hashKey})`]
+
+  if (this.rangeKey) {
+    condition.push('AND', `attribute_not_exists(${this.rangeKey})`)
+  }
+
+  opts.ConditionExpression = condition.join(' ')
+  return exports.put.call(this, hash, range, props, opts)
 }

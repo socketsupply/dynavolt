@@ -17,5 +17,9 @@ exports.get = async function (hash, range, opts = {}) {
     return { err }
   }
 
+  if (!data.Item) {
+    return {}
+  }
+
   return { data: this.toJSON(data.Item) }
 }

@@ -4,9 +4,7 @@ exports.delete = async function (hash, range, props = {}) {
   }
 
   const params = {
-    Item: {
-      ...this.createKeyProperties(hash, range)
-    },
+    Key: this.createKeyProperties(hash, range),
     TableName: this.meta.TableName
   }
 
