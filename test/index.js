@@ -64,7 +64,6 @@ test('put', async t => {
 
 test('get', async t => {
   const { err, data } = await table.get('oregon', 'salem')
-  console.log('SALEN', data)
 
   t.ok(!err, err && err.message)
   t.ok(data.donuts === true, 'there are donuts in salem oregon')
@@ -76,8 +75,8 @@ test('update a value', async t => {
   t.ok(!errUpdate, errUpdate && errUpdate.message)
 
   const { err: errGet, data } = await table.get('oregon', 'salem')
-  console.log('SALEN?', data)
   t.ok(!errGet, errGet && errGet.message)
+
   t.ok(data.donuts === false, 'there are donuts in salem oregon')
   t.end()
 })
@@ -117,5 +116,52 @@ test('delete a key that does not exist', async t => {
   t.end()
 })
 
+test('batch write', async t => {
+  const ops = [
+    ['a', 'a', { value: 0 }],
+    ['a', 'b', { value: 1 }],
+    ['a', 'c', { value: 2 }],
+    ['b', 'a', { value: 3 }],
+    ['b', 'b', { value: 4 }]
+  ]
+
+  const { err } = await table.batchWrite(ops)
+  t.ok(!err, err && err.message)
+  t.end()
+})
+
+test('batch read', async t => {
+  const ops = [
+    ['a', 'a'],
+    ['a', 'b'],
+    ['a', 'c'],
+    ['b', 'a'],
+    ['b', 'b']
+  ]
+
+  const { err, data } = await table.batchRead(ops)
+  t.ok(!err, err && err.message)
+  t.ok(Array.isArray(data), 'got an array of values')
+  t.ok(data.length === 5, 'correct number of items')
+  t.end()
+})
+
+test('batch write with deletes', async t => {
+  const ops = [
+    ['a', 'a', { value: 0 }],
+    ['a', 'b', { value: 1 }],
+    ['a', 'c', { value: 2 }],
+    ['b', 'a', { value: 3 }],
+    ['b', 'b']
+  ]
+
+  const { errBatch } = await table.batchWrite(ops)
+  t.ok(!errBatch, errBatch && errBatch.message)
+
+  const { err: errGet } = await table.get('b', 'b')
+  t.ok(errGet.notFound, 'the record was removed')
+
+  t.end()
+})
 
 test('remote teardown', reset)

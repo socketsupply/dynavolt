@@ -32,7 +32,9 @@ function toDynamoJSON (original) {
         copy[k] = convert(v, original[k])
       }
 
-      const value = type === 'Uint8Array' ? original[k] : copy[k]
+      let value = type === 'Uint8Array' ? original[k] : copy[k]
+      if (type === 'Number') value = String(value)
+
       copy[k] = { [getDynamoDataType(original[k])]: value }
     }
     return copy
@@ -52,6 +54,10 @@ function toJSON (o) {
       }
 
       o[k] = Object.values(o[k])[0]
+
+      if (type === 'N') {
+        o[k] = Number(o[k])
+      }
     }
 
     return o
