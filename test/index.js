@@ -152,7 +152,10 @@ test('batch write with deletes', async t => {
     ['a', 'b', { value: 1 }],
     ['a', 'c', { value: 2 }],
     ['b', 'a', { value: 3 }],
-    ['b', 'b']
+    ['b', 'b'],
+    ['b', 'c', { value: 3 }],
+    ['b', 'd', { value: 3 }],
+    ['b', 'e', { value: 3 }]
   ]
 
   const { errBatch } = await table.batchWrite(ops)
@@ -161,6 +164,36 @@ test('batch write with deletes', async t => {
   const { err: errGet } = await table.get('b', 'b')
   t.ok(errGet.notFound, 'the record was removed')
 
+  t.end()
+})
+
+test('query', async t => {
+  const itr = table.query('$(hash) = S(b)', { Limit: 3 })
+
+  let count = 0
+
+  for await (const { key, value } of itr) {
+    count++
+    t.ok(key.length === 2)
+    t.ok(value.value === 3)
+  }
+
+  t.ok(count === 4)
+  t.end()
+})
+
+test('query with a limit (native parameters)', async t => {
+  const itr = table.query('$(hash) = S(a)', { Limit: 3 })
+
+  let count = 0
+
+  for await (const { key, value } of itr) {
+    count++
+    t.ok(key.length === 2)
+    t.ok(typeof value.value !== 'undefined')
+  }
+
+  t.ok(count === 3)
   t.end()
 })
 

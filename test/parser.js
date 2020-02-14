@@ -42,6 +42,13 @@ test('same as last test but tests nesting of parens', t => {
   t.end()
 })
 
+test('mix of names and values', t => {
+  const expected = '{"attributeValues":{":v5":{"S":"foo"}},"attributeNames":{"#v4":"range"},"expression":"#v4 = :v5"}'
+  const o = queryParser('$(range) = S(foo)')
+  t.ok(expected === JSON.stringify(o))
+  t.end()
+})
+
 test('unmatched params should throw', t => {
   try {
     queryParser('foo = N(1(00)')

@@ -1,22 +1,32 @@
 const { queryParser } = require('./util')
 
-exports.query = async function (dsl, opts = {}) {
-  return exports.iterator(dsl, opts, 'query')
+exports.query = function (dsl, opts = {}) {
+  return exports.iterator.call(this, dsl, opts, 'query')
 }
 
-exports.scan = async function (dsl, opts = {}) {
-  return exports.iterator(dsl, opts, 'scan')
+exports.scan = function (dsl, opts = {}) {
+  return exports.iterator.call(this, dsl, opts, 'scan')
 }
 
-exports.iterator = async function (dsl, opts = {}, method) {
+exports.iterator = function (dsl, opts = {}, method) {
   const {
     expression,
-    attributeValues: ExpressionAttributeValues
+    attributeValues: ExpressionAttributeValues,
+    attributeNames: ExpressionAttributeNames
   } = queryParser(dsl)
+
+  if (!Object.keys(ExpressionAttributeValues).length) {
+    throw new Error('Query has no values')
+  }
+
+  if (!expression.length) {
+    throw new Error('Query is empty')
+  }
 
   const params = {
     TableName: this.meta.TableName,
     ExpressionAttributeValues,
+    ExpressionAttributeNames,
     ...opts
   }
 
@@ -29,6 +39,11 @@ exports.iterator = async function (dsl, opts = {}, method) {
   let values = []
   let iteratorIndex = 0
   let isFinished = false
+
+  const hashKey = this.hashKey
+  const hashType = this.hashType
+  const rangeKey = this.rangeKey
+  const rangeType = this.rangeType
 
   return {
     [Symbol.asyncIterator] () {
@@ -62,9 +77,16 @@ exports.iterator = async function (dsl, opts = {}, method) {
 
       if (res.Items) {
         const restructured = res.Items.map(item => {
-          delete item[this.hashKey]
-          delete item[this.rangeKey]
-          return [this.hashKey, this.rangeKey, this.toJSON(item)]
+          const key = [item[hashKey][hashType]]
+          delete item[hashKey]
+
+          if (rangeKey) {
+            const range = item[rangeKey][rangeType]
+            delete item[this.rangeKey]
+            if (range) key.push(range)
+          }
+
+          return { key, value: this.toJSON(item) }
         })
 
         values = [...values, ...restructured]
