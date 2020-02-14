@@ -281,11 +281,9 @@ for <b>await</b> (<b>const</b> { key, value } <b>of</b> table.query(q)) {
         DyanmoDB keys are sorted, so the query will produce a set like this...
         <p>
       <pre><code>
-[
-  [<i>'oregon'</i>, <i>'adams'</i>, { ... }]
-  [<i>'oregon'</i>, <i>'adrian'</i>, { ... }]
-  ...
-]
+[<i>'oregon'</i>, <i>'adams'</i>] { ... }
+[<i>'oregon'</i>, <i>'adrian'</i>] { ... }
+...
       </code></pre>
       <p>
       Dynavolt automatically names, stores and annotates the types of the

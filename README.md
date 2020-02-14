@@ -4,7 +4,9 @@ A nice DynamoDB client.
 # USAGE
 
 ```js
+const AWS = require('aws-sdk')
 const Dynavolt = require('dynavolt')
+const db = new Dynavolt(AWS, { region: 'us-west-2' })
 ```
 
 ## TABLES
@@ -12,23 +14,21 @@ const Dynavolt = require('dynavolt')
 ### CREATE
 
 ```js
-const { err, table } = awwait Dynavolt.create('artists')
+const { err, table } = awwait db.create('artists')
 ```
 
 <details><summary><i>ADVANCED USAGE</i></summary>
 <p>
 
-You can also specify `hash`, `range` and `options`.
+You can also specify `hash`, `range`, and `options`.
 
 ```js
-const key = { hash: 'genres', range: 'artists' }
-
 const opts = { TimeToLiveSpecification: {
   AttributeName: 'ttl',
   Enabled: true
 }
 
-const { err, table } = awwait Dynavolt.create('artists', key, opts)
+const { err } = awwait db.create('artists', 'genres', 'artists', opts)
 ```
 
 </p>
@@ -37,7 +37,7 @@ const { err, table } = awwait Dynavolt.create('artists', key, opts)
 ### OPEN
 
 ```js
-const { err, table } = await Dynavolt.open('artists', { region: 'us-west-2' })
+const { err, table } = await db.open('artists')
 ```
 
 ## METHODS
@@ -74,17 +74,17 @@ const { err } = await table.delete('henry', 'rollins')
 
 ```js
 const { err } = await table.batchWrite([
-  { put: { hash: 'foo', range: 'bar', ... } },
-  { delete: { hash: 'foo', range: 'bar' } }
- ])
+  ['foo', 'bar', { beep: 'boop' }],
+  ['foo', 'bar']
+])
 ```
 
 ### BATCH READ
 
 ```js
 const { err } = await table.batchRead([
-  { hash: 'foo', range: 'bazz' },
-  { hash: 'beep', range: 'boop' }
+  ['foo', 'bazz'],
+  ['beep', 'boop']
 ])
 ```
 

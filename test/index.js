@@ -167,15 +167,22 @@ test('batch write with deletes', async t => {
   t.end()
 })
 
+test('count all rows', async t => {
+  const { err, count } = await table.count()
+  t.ok(!err, err && err.message)
+  t.equal(count, 7, 'count is correct')
+  t.end()
+})
+
 test('query', async t => {
-  const itr = table.query('$(hash) = S(b)', { Limit: 3 })
+  const itr = table.query('$(hash) = S(b)')
 
   let count = 0
 
   for await (const { key, value } of itr) {
     count++
     t.ok(key.length === 2)
-    t.ok(value.value === 3)
+    t.ok(typeof value.value === 'object')
   }
 
   t.ok(count === 4)
@@ -190,7 +197,7 @@ test('query with a limit (native parameters)', async t => {
   for await (const { key, value } of itr) {
     count++
     t.ok(key.length === 2)
-    t.ok(typeof value.value !== 'undefined')
+    t.ok(typeof value.value === 'object')
   }
 
   t.ok(count === 3)
