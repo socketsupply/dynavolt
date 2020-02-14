@@ -199,21 +199,28 @@ npm install @optoolco/<b>dynavolt</b>
       <section>
         <h3>Updating data</h3>
         <p>
-          Updating a value allows your to add new properties to a value or
-          overwrite old ones.
+          Updating a value allows your to add new properties to a value,
+          overwrite or remove existing ones without race conditions.
         </p>
         <pre><code>
-<b>const</b> value = { elevation: <i>46.7</i> }
+<b>const</b> expression = <i>'SET $(elevation) = 46.6'</i>
 
-<b>const</b> { err, data } = <b>await</b> table.update(<i>'oregon'</i>, <i>'salem'</i>, value)
+<b>const</b> { err, data } = <b>await</b> table.update(<i>'oregon'</i>, <i>'salem'</i>, expression)
         </code></pre>
 
         <p>
           Now the key contains the following value
         </p>       
         <pre><code>
-{ founded: <i>1842</i> elevation: <i>46.7</i> }
+{ founded: <i>1842</i> elevation: <i>46.6</i> }
         </code></pre>
+        <p>
+          The update expression is very expressive and has a lot of options
+          for conditional updates and deletes. The only syntax difference between
+          the <a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.UpdateExpressions.html">native dynamo syntax</a>
+          is that Dynavolt automatically creates the attribute names and values
+          for you &mdash; variables like this <code>$(...)</code>, have their
+          names generated for you.
       </section>
 
 
