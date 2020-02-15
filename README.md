@@ -28,7 +28,7 @@ const opts = { TimeToLiveSpecification: {
   Enabled: true
 }
 
-const { err } = awwait db.create('artists', 'genres', 'artists', opts)
+const { err } = await db.create('artists', 'genres', 'artists', opts)
 ```
 
 </p>
