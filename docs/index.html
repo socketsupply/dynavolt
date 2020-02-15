@@ -259,7 +259,7 @@ range = begins_with(range, S(ad))
         <pre><code>
 <b>const</b> q = <i>'hash = S(oregon) AND founded > 1900'</i>
 
-for <b>await</b> (<b>const</b> { key, value } <b>of</b> table.query(q)) {
+for <b>await</b> (<b>const</b> { key, value } <b>of</b> table.scan(q)) {
   console.log(key, value)
 }
       </code></pre>
