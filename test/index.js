@@ -168,9 +168,9 @@ test('batch write with deletes', async t => {
 })
 
 test('count all rows', async t => {
-  const { err, count } = await table.count(true)
+  const { err, data } = await table.count(true)
   t.ok(!err, err && err.message)
-  t.equal(count, 7, 'count is correct')
+  t.equal(data, 7, 'count is correct')
   t.end()
 })
 

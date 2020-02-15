@@ -276,10 +276,11 @@ for <b>await</b> (<b>const</b> { key, value } <b>of</b> table.query(q)) {
           count of what is actually in the database. This approach performs a
           scan.
         </p>
+        The <code>data</code> property contains an integer.
 
         <pre><code>
 <b>const</b> manualCount = true
-<b>const</b> { err } = <b>await</b> table.count(manualCount)
+<b>const</b> { err, data } = <b>await</b> table.count(manualCount)
         </code></pre>
       </section>
 

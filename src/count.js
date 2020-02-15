@@ -13,7 +13,7 @@ exports.count = async function (isManualCount, opts) {
       return { err }
     }
 
-    return { count: data.Table.ItemCount }
+    return { data: data.Table.ItemCount }
   }
 
   params.Select = 'COUNT'
@@ -38,5 +38,5 @@ exports.count = async function (isManualCount, opts) {
     params.ExclusiveStartKey = data.LastEvaluatedKey
   }
 
-  return { count, LastEvaluatedKey: params.LastEvaluatedKey }
+  return { data: count, LastEvaluatedKey: params.LastEvaluatedKey }
 }
