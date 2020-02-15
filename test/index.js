@@ -1,6 +1,6 @@
 const Dynavolt = require('../src')
 const AWS = require('aws-sdk')
-const test = require('tape')
+const test = require('@pre-bundled/tape')
 
 const TEST_CONFIG = { region: 'us-west-2' }
 
