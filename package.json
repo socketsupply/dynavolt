@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node ./test"
+    "test": "npr standard && node ./test"
   },
   "repository": {
     "type": "git",
@@ -19,8 +19,12 @@
     "url": "https://github.com/optoolco/dynavolt/issues"
   },
   "homepage": "https://github.com/optoolco/dynavolt#readme",
+  "binDependencies": {
+    "standard": "14.3.1"
+  },
   "devDependencies": {
+    "@pre-bundled/tape": "4.11.0",
     "aws-sdk": "^2.618.0",
-    "tape": "^4.13.0"
+    "npm-bin-deps": "1.4.2"
   }
 }
