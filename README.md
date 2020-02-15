@@ -14,7 +14,7 @@ const db = new Dynavolt(AWS, { region: 'us-west-2' })
 ### CREATE
 
 ```js
-const { err, table } = awwait db.create('artists')
+const { err, table } = await db.create('artists')
 ```
 
 <details><summary><i>ADVANCED USAGE</i></summary>
