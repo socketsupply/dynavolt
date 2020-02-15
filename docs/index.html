@@ -35,7 +35,7 @@
         <a href="#">DynamoDB</a> is a <a href="#">Key-Value</a> oriented
           database. This library tries to reduce the learning curve associated
           with using DynamoDB by <b>progressively disclosing</b> features only
-          as you need them.
+          as you need them. Visit the project on <a href="https://github.com/optoolco/dynavolt">Github</a>.
         </p>
 
         <pre>
@@ -162,7 +162,6 @@ npm install @optoolco/<b>dynavolt</b>
 
 
 
-
       <section>
         <h3>Batch Reads</h3>
         <p>
@@ -175,6 +174,22 @@ npm install @optoolco/<b>dynavolt</b>
   [<i>'beep'</i>, <i>'boop'</i>]
 ])
       </code></pre>
+      </section>
+
+
+
+
+      <section>
+        <h3>Conditional Put</h3>
+        <p>
+          Sometimes you only want to put a value into the database if it doesn't
+          already exist. The <code>err.exists</code> property will be true if the
+          record is already in the database.
+        </p>
+
+        <pre><code>
+<b>const</b> { err } = <b>await</b> table.putNew(<i>'oregon'</i>, <i>'salem'</i>, { founded: <i>1842</i> })
+        </code></pre>
       </section>
 
 
@@ -248,6 +263,24 @@ for <b>await</b> (<b>const</b> { key, value } <b>of</b> table.query(q)) {
   console.log(key, value)
 }
       </code></pre>
+      </section>
+
+      <section>
+        <h3>Row Count</h3>
+        <p>
+          The fast way is to ask DynamoDB to tell you what the last count was.
+          However, this value is updated approximately every six hours. So the
+          most recent changes may not be reflected in this value.
+        <p>
+          The slow way, a manual count, will always give you the most current
+          count of what is actually in the database. This approach performs a
+          scan.
+        </p>
+
+        <pre><code>
+<b>const</b> manualCount = true
+<b>const</b> { err } = <b>await</b> table.count(manualCount)
+        </code></pre>
       </section>
 
     </main>

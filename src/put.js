@@ -15,8 +15,11 @@ exports.put = async function (hash, range, props = {}, opts = {}) {
  
   try {
     await this.db.putItem(params).promise()
-  } catch (ex) {
-    const err = new Error(ex.message)
+  } catch (err) {
+    if (err.message === 'The conditional request failed') {
+      return { err: { exists: true } }
+    }
+
     return { err }
   }
 
@@ -24,10 +27,15 @@ exports.put = async function (hash, range, props = {}, opts = {}) {
 }
 
 exports.putNew = async function (hash, range, props = {}, opts = {}) {
-  const condition = [`attribute_not_exists(${this.hashKey})`]
+  const condition = ['attribute_not_exists(#hash)']
+
+  opts.ExpressionAttributeNames = {
+    '#hash': this.hashKey
+  }
 
   if (this.rangeKey) {
-    condition.push('AND', `attribute_not_exists(${this.rangeKey})`)
+    condition.push('AND', 'attribute_not_exists(#range)')
+    opts.ExpressionAttributeNames['#range'] = this.rangeKey
   }
 
   opts.ConditionExpression = condition.join(' ')

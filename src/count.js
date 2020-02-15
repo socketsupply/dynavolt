@@ -1,9 +1,22 @@
-exports.count = async function (opts) {
+exports.count = async function (isManualCount, opts) {
   const params = {
     TableName: this.meta.TableName,
-    Select: 'COUNT',
     ...opts
   }
+
+  if (!isManualCount) {
+    let data = {}
+
+    try {
+      data = await this.db.describeTable(params).promise()
+    } catch (err) {
+      return { err }
+    }
+
+    return { count: data.Table.ItemCount }
+  }
+
+  params.Select = 'COUNT'
 
   let count = 0
 
