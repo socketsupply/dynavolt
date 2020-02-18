@@ -38,16 +38,16 @@ test('create database instance', t => {
   t.end()
 })
 
-test('remote setup', reset)
+// test('remote setup', reset)
 
 test('create a table', async t => {
-  const { err } = await db.create('test')
+  const { err } = await db.create('app-test')
   t.ok(!err, 'the table was created')
   t.end()
 })
 
 test('open a table', async t => {
-  const { err, table: _table } = await db.open('test')
+  const { err, table: _table } = await db.open('app-test')
   t.ok(!err, err && err.message)
 
   table = _table
@@ -57,6 +57,13 @@ test('open a table', async t => {
 
 test('put', async t => {
   const { err } = await table.put('oregon', 'salem', { donuts: true })
+
+  t.ok(!err, err && err.message)
+  t.end()
+})
+
+test('put', async t => {
+  const { err } = await table.put('oregon', 'potland', { donuts: { a: { b: { c: 100 } } }, ax: ['quxx', 'beep', 'boop'], n: 100 })
 
   t.ok(!err, err && err.message)
   t.end()
