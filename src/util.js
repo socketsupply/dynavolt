@@ -76,7 +76,7 @@ function recast (type, value) {
 
 function queryParser (source) {
   if (!source.match(TYPED_VARIABLES_RE)) {
-    return source // has no typed variables
+    return { expression: source } // has no typed variables
   }
 
   source = source.slice()
@@ -120,7 +120,10 @@ function queryParser (source) {
       value.push(ch)
 
       if (openStates && !ch) {
-        throw new Error('End of string before closing paren')
+        return {
+          err: 'End of string before closing paren',
+          position: source.length
+        }
       }
     }
 
