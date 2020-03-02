@@ -6,11 +6,11 @@ const { Table } = require('./table')
 const { getDynamoDataType } = require('./util')
 
 class Database {
-  constructor (AWS, opts = {}) {
-    assert(AWS, 'the first argument must be a reference to the aws-sdk')
+  constructor (DynamoDB, opts = {}) {
+    assert(DynamoDB, 'the first argument must be a reference to the aws-sdk')
 
-    this.AWS = AWS // hold onto this so the Table class can use it too
-    this.db = new AWS.DynamoDB(opts)
+    this.DynamoDB = DynamoDB // hold onto this so the Table class can use it too
+    this.db = new DynamoDB(opts)
 
     this.opts = opts
     this.tables = {}
@@ -23,7 +23,7 @@ class Database {
       return { table: this.tables[TableName] } // the table is already "open".
     }
 
-    const table = this.tables[TableName] = new Table(this.AWS, this.opts, opts)
+    const table = this.tables[TableName] = new Table(this.DynamoDB, this.opts, opts)
 
     try {
       const { Table } = await this.db.describeTable({ TableName }).promise()
@@ -111,7 +111,6 @@ class Database {
         return { err }
       }
 
-      console.log('create', data.Table)
       if (data.Table.TableStatus !== 'ACTIVE') {
         await sleep(2e3)
       } else {

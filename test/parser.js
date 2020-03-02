@@ -19,7 +19,8 @@ test('create dynamo json from regular json', t => {
   }
 
   const j = toDynamoJSON(o)
-  const expected = '{"str":{"S":"string"},"int":{"N":"1"},"float":{"N":"1.1"},"obja":{"M":{"objb":{"M":{"str":{"S":"str"},"int":{"N":"1"}}},"arr":{"NS":[{"S":"str"}]},"ab":{"BS":[{"B":{"type":"Buffer","data":[0]}}]}}},"no":{"BOOL":false},"yes":{"BOOL":true}}'
+
+  const expected = '{"str":{"S":"string"},"int":{"N":"1"},"float":{"N":"1.1"},"obja":{"M":{"objb":{"M":{"str":{"S":"str"},"int":{"N":"1"}}},"arr":{"SS":["str"]},"ab":{"BS":[{"type":"Buffer","data":[0]}]}}},"no":{"BOOL":false},"yes":{"BOOL":true}}'
 
   t.ok(expected === JSON.stringify(j))
   t.ok(JSON.stringify(toJSON(j)) === JSON.stringify(o))
@@ -50,10 +51,7 @@ test('mix of names and values', t => {
 })
 
 test('unmatched params should throw', t => {
-  try {
-    queryParser('foo = N(1(00)')
-  } catch (err) {
-    t.ok(err, 'should fail')
-    t.end()
-  }
+  const o = queryParser('foo = N(1(00)')
+  t.ok(o.err, 'should fail')
+  t.end()
 })

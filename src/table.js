@@ -1,9 +1,9 @@
 const { queryParser, toJSON, toDynamoJSON } = require('./util')
 
 class Table {
-  constructor (AWS, dbOpts = {}, opts = {}) {
+  constructor (DynamoDB, dbOpts = {}, opts = {}) {
     this.disableATD = opts.disableATD
-    this.db = new AWS.DynamoDB({ ...dbOpts, ...opts })
+    this.db = new DynamoDB({ ...dbOpts, ...opts })
   }
 
   createKeyProperties (hash, range) {

@@ -32,22 +32,22 @@ const reset = async t => {
 }
 
 test('create database instance', t => {
-  db = new Dynavolt(AWS, TEST_CONFIG)
+  db = new Dynavolt(AWS.DynamoDB, TEST_CONFIG)
   t.ok(db.open, 'has open method')
   t.ok(db.create, 'has create method')
   t.end()
 })
 
-// test('remote setup', reset)
+test('remote setup', reset)
 
 test('create a table', async t => {
-  const { err } = await db.create('app-test')
-  t.ok(!err, 'the table was created')
+  const { err } = await db.create('test')
+  t.ok(!err, err ? err.message : 'the table was created')
   t.end()
 })
 
 test('open a table', async t => {
-  const { err, table: _table } = await db.open('app-test')
+  const { err, table: _table } = await db.open('test')
   t.ok(!err, err && err.message)
 
   table = _table
@@ -177,7 +177,7 @@ test('batch write with deletes', async t => {
 test('count all rows', async t => {
   const { err, data } = await table.count(true)
   t.ok(!err, err && err.message)
-  t.equal(data, 7, 'count is correct')
+  t.equal(data, 8, 'count is correct')
   t.end()
 })
 

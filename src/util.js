@@ -33,7 +33,7 @@ function toDynamoJSON (original) {
         copy[k] = convert(v, original[k])
       }
 
-      let value = type === 'Uint8Array' ? original[k] : copy[k]
+      let value = type === 'Array' ? original[k] : copy[k]
       if (type === 'Number') value = String(value)
 
       copy[k] = { [getDynamoDataType(original[k])]: value }
@@ -70,6 +70,7 @@ function toJSON (o) {
 function recast (type, value) {
   switch (type) {
     case 'BOOL': return value === 'true'
+    case 'B': return Buffer.from(value)
     default: return value
   }
 }
