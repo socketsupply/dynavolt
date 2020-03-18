@@ -13,6 +13,7 @@ class Database {
     this.db = new DynamoDB(opts)
 
     this.opts = opts
+    /** @type {{ [key: string]: Table }} */
     this.tables = {}
   }
 
