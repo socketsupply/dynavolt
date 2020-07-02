@@ -359,7 +359,13 @@ class Table {
           return { done: true }
         }
 
-        const res = await this.db[method](params).promise()
+        let res = null
+
+        try {
+          res = await this.db[method](params).promise()
+        } catch (err) {
+          return { value: { err } }
+        }
 
         if (res.Items) {
           const restructured = res.Items.map(item => {
@@ -372,7 +378,7 @@ class Table {
               if (range) key.push(range)
             }
 
-            return { key, value: toJSON(item) }
+            return { data: { key, value: toJSON(item) } }
           })
 
           values = [...values, ...restructured]
@@ -391,3 +397,4 @@ class Table {
 }
 
 module.exports = { Table }
+
