@@ -12,10 +12,12 @@ function getDynamoDataType (v) {
       if (getDataType(v[0]) === 'String') return 'SS'
       if (getDataType(v[0]) === 'Number') return 'NS'
       if (getDataType(v[0]) === 'Object') return 'L'
+      if (getDataType(v[0]) === 'Undefined') return 'L'
       break
     case 'Object': return 'M'
     case 'String': return 'S'
     case 'Null': return 'NULL'
+    case 'Undefined': return 'NULL'
     case 'Boolean': return 'BOOL'
     case 'Number': return 'N'
     case 'Uint8Array': return 'B'
@@ -37,17 +39,20 @@ function toDynamoJSON (original) {
 
       if (type === 'Array') {
         const typeOfFirstItem = getDataType(original[k][0])
+
         if (['Object', 'Array'].includes(typeOfFirstItem)) {
-          copy[k] = convert(v, original[k])
+          value = convert(v, original[k])
         } else {
           value = original[k]
         }
       }
 
       if (type === 'Number') value = String(value)
+      if (type === 'Null') value = true
 
       copy[k] = { [getDynamoDataType(original[k])]: value }
     }
+
     return copy
   }
 

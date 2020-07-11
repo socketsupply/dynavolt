@@ -6,13 +6,13 @@ const TEST_CONFIG = { region: 'us-west-2' }
 
 require('./parser')
 
-const _dynamo = new AWS.DynamoDB(TEST_CONFIG)
+// const _dynamo = new AWS.DynamoDB(TEST_CONFIG)
 
 let db = null
 let table = null
 
 const reset = async t => {
-  try {
+  /* try {
     await _dynamo.deleteTable({ TableName: 'test' }).promise()
   } catch (err) {
     if (err.code !== 'ResourceNotFoundException') {
@@ -26,7 +26,7 @@ const reset = async t => {
     if (err.code !== 'ResourceNotFoundException') {
       t.fail(err.message)
     }
-  }
+  } */
 
   t.end()
 }
@@ -62,8 +62,15 @@ test('put', async t => {
   t.end()
 })
 
-test('put', async t => {
-  const { err } = await table.put('oregon', 'potland', { donuts: { a: { b: { c: 100 } } }, ax: ['quxx', 'beep', 'boop'], n: 100 })
+test('put complex', async t => {
+  const { err } = await table.put('oregon', 'portland', { donuts: { a: { b: { c: 100 } } }, ax: ['quxx', 'beep', 'boop'], n: 100 })
+
+  t.ok(!err, err && err.message)
+  t.end()
+})
+
+test('put more complex', async t => {
+  const { err } = await table.put('oregon', 'bend', require('./fixture.json'))
 
   t.ok(!err, err && err.message)
   t.end()
