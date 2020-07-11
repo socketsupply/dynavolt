@@ -33,7 +33,17 @@ function toDynamoJSON (original) {
         copy[k] = convert(v, original[k])
       }
 
-      let value = type === 'Array' ? original[k] : copy[k]
+      let value = copy[k]
+
+      if (type === 'Array') {
+        const typeOfFirstItem = getDataType(original[k][0])
+        if (['Object', 'Array'].includes(typeOfFirstItem)) {
+          copy[k] = convert(v, original[k])
+        } else {
+          value = original[k]
+        }
+      }
+
       if (type === 'Number') value = String(value)
 
       copy[k] = { [getDynamoDataType(original[k])]: value }

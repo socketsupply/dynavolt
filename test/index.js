@@ -186,7 +186,8 @@ test('query', async t => {
 
   let count = 0
 
-  for await (const { key, value } of itr) {
+  for await (const { data } of itr) {
+    const { key, value } = data
     count++
     t.ok(key.length === 2)
     t.ok(typeof value === 'object')
@@ -201,7 +202,8 @@ test('query with a limit (native parameters)', async t => {
 
   let count = 0
 
-  for await (const { key, value } of itr) {
+  for await (const { data } of itr) {
+    const { key, value } = data
     count++
     t.ok(key.length === 2)
     t.ok(typeof value === 'object')
