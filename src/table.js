@@ -145,13 +145,18 @@ class Table {
       ...opts
     }
 
+    let data = null
     try {
-      await this.db.updateItem(params).promise()
+      data = await this.db.updateItem(params).promise()
     } catch (err) {
       return { err }
     }
 
-    return {}
+    if (!data.Attributes) {
+      return {}
+    }
+
+    return { data: toJSON(data.Attributes) }
   }
 
   async count (isManualCount, opts) {
