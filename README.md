@@ -35,9 +35,10 @@ const { err } = await db.create('artists', 'genres', 'artists', opts)
 </details>
 
 ### OPEN
+Open a database and optionally create it if it doesnt exist.
 
 ```js
-const { err, table } = await db.open('artists')
+const { err, table } = await db.open('artists', { create: true })
 ```
 
 ## METHODS

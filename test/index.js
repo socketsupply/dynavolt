@@ -15,7 +15,7 @@ const reset = async t => {
   try {
     await _dynamo.deleteTable({ TableName: 'test' }).promise()
   } catch (err) {
-    if (err.code !== 'ResourceNotFoundException') {
+    if (err.name !== 'ResourceNotFoundException') {
       t.fail(err.message)
     }
   }
@@ -23,7 +23,23 @@ const reset = async t => {
   try {
     await _dynamo.waitFor('tableNotExists', { TableName: 'test' }).promise()
   } catch (err) {
-    if (err.code !== 'ResourceNotFoundException') {
+    if (err.name !== 'ResourceNotFoundException') {
+      t.fail(err.message)
+    }
+  }
+
+  try {
+    await _dynamo.deleteTable({ TableName: 'test-create-if-not-exists' }).promise()
+  } catch (err) {
+    if (err.name !== 'ResourceNotFoundException') {
+      t.fail(err.message)
+    }
+  }
+
+  try {
+    await _dynamo.waitFor('tableNotExists', { TableName: 'test-create-if-not-exists' }).promise()
+  } catch (err) {
+    if (err.name !== 'ResourceNotFoundException') {
       t.fail(err.message)
     }
   }
@@ -52,6 +68,13 @@ test('open a table', async t => {
 
   table = _table
   t.ok(table, 'the table was opened')
+  t.end()
+})
+
+test('open a table that does not exist', async t => {
+  const { err, table: _table } = await db.open('test-create-if-not-exists', { create: true })
+  t.ok(!err, err && err.message)
+  t.ok(_table.db, 'underlying database created and opened')
   t.end()
 })
 

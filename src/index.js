@@ -30,7 +30,21 @@ class Database {
       const { Table } = await this.db.describeTable({ TableName }).promise()
       table.meta = Table
     } catch (err) {
-      return { err }
+      if (err.name !== 'ResourceNotFoundException') {
+        return { err }
+      }
+
+      if (!opts.create) {
+        return { err }
+      }
+
+      const { err: errCreate } = await this.create(TableName)
+
+      if (errCreate) {
+        return { err: errCreate }
+      }
+
+      return this.open(TableName, opts)
     }
 
     const schema = table.meta.KeySchema
