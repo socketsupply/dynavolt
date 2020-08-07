@@ -6,13 +6,13 @@ const TEST_CONFIG = { region: 'us-west-2' }
 
 require('./parser')
 
-// const _dynamo = new AWS.DynamoDB(TEST_CONFIG)
+const _dynamo = new AWS.DynamoDB(TEST_CONFIG)
 
 let db = null
 let table = null
 
 const reset = async t => {
-  /* try {
+  try {
     await _dynamo.deleteTable({ TableName: 'test' }).promise()
   } catch (err) {
     if (err.name !== 'ResourceNotFoundException') {
@@ -42,7 +42,7 @@ const reset = async t => {
     if (err.name !== 'ResourceNotFoundException') {
       t.fail(err.message)
     }
-  } */
+  }
 
   t.end()
 }
@@ -207,7 +207,7 @@ test('batch write with deletes', async t => {
 test('count all rows', async t => {
   const { err, data } = await table.count(true)
   t.ok(!err, err && err.message)
-  t.equal(data, 8, 'count is correct')
+  t.equal(data, 9, 'count is correct')
   t.end()
 })
 
