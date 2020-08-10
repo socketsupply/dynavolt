@@ -68,11 +68,7 @@ class Database {
     return { table }
   }
 
-  async create (
-    TableName, hash = 'hash',
-    range = 'range',
-    opts = {}
-  ) {
+  async create (TableName, hash = 'hash', range = 'range', opts = {}) {
     assert(TableName, 'a table name parameter is required')
 
     const params = {
