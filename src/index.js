@@ -97,7 +97,18 @@ class Database {
       })
     }
 
-    params.BillingMode = 'PAY_PER_REQUEST'
+    const isOnDemand = this.opts.onDemand === true
+    const hasEndpoint = !!this.opts.endpoint
+    const hasCapacity = opts.readCapacity || opts.writeCapacity
+
+    if (!isOnDemand && (hasEndpoint || hasCapacity)) {
+      params.ProvisionedThroughput = {
+        ReadCapacityUnits: opts.readCapacity || 5,
+        WriteCapacityUnits: opts.writeCapacity || 5
+      }
+    } else {
+      params.BillingMode = 'PAY_PER_REQUEST'
+    }
 
     params.SSESpecification = {
       Enabled: true
