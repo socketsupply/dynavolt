@@ -20,8 +20,10 @@ class Database {
   async open (TableName, opts = {}) {
     assert(TableName, 'a table name parameter is required')
 
-    if (this.tables[TableName]) {
-      return { table: this.tables[TableName] } // the table is already "open".
+    const existing = this.tables[TableName]
+
+    if (existing && existing.meta) {
+      return { table: existing } // the table is already "open".
     }
 
     const table = this.tables[TableName] = new Table(this.DynamoDB, this.opts, opts)
