@@ -23,7 +23,7 @@ class Database {
     const existing = this.tables[TableName]
 
     if (existing && existing.meta) {
-      return { table: existing } // the table is already "open".
+      return { data: existing } // the table is already "open".
     }
 
     const table = this.tables[TableName] = new Table(this.DynamoDB, this.opts, opts)
@@ -65,7 +65,7 @@ class Database {
       table.rangeType = rangeDef.AttributeType
     }
 
-    return { table }
+    return { data: table }
   }
 
   async create (TableName, hash = 'hash', range = 'range', opts = {}) {
@@ -142,7 +142,7 @@ class Database {
       }
     }
 
-    return { table: this }
+    return { data: this }
   }
 }
 

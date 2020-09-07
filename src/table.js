@@ -40,7 +40,7 @@ class Table {
     }
 
     if (isEnabled && Enabled) {
-      return { table: this }
+      return { data: this }
     }
 
     const params = {
@@ -57,7 +57,7 @@ class Table {
       return { err }
     }
 
-    return { table: this }
+    return { data: this }
   }
 
   async batchWrite (batch, opts = {}) {

@@ -14,7 +14,7 @@ const db = new Dynavolt(AWS, { region: 'us-west-2' })
 ### CREATE
 
 ```js
-const { err, table } = await db.create('artists')
+const { err, data: table } = await db.create('artists')
 ```
 
 <details><summary><i>ADVANCED USAGE</i></summary>
@@ -38,7 +38,7 @@ const { err } = await db.create('artists', 'genres', 'artists', opts)
 Open a database and optionally create it if it doesnt exist.
 
 ```js
-const { err, table } = await db.open('artists', { create: true })
+const { err, data: table } = await db.open('artists', { create: true })
 ```
 
 ## METHODS
@@ -96,7 +96,7 @@ Query takes a [Key Condition Expression][0]. For syntax refernece see the
 ```js
 const iterator = table.query(`hash = N(greetings) AND begins_with(range, S(hell))`)
 
-for await (const { key, value } of iterator) {
+for await (const { err, data: { key, value } } of iterator) {
   console.log(key, value)
 }
 ```
@@ -113,7 +113,7 @@ const iterator = table
   .filter(`contains(artists.name, S(danzig)`)
   .properties('artists.weight', 'artists.height')
 
-for await (const { key, value } of iterator) {
+for await (const { err, data: { key, value } } of iterator) {
   console.log(key, value)
 }
 ```
@@ -127,7 +127,7 @@ Scan takes a [Filter Expression][2].
 ```js
 const iterator = table.scan(`contains(artists.name, S(danzig)`)
 
-for await (const { key, value } of iterator) {
+for await (const { err, data: { key, value } } of iterator) {
   console.log(key, value)
 }
 ```

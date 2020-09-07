@@ -63,7 +63,7 @@ test('create a table', async t => {
 })
 
 test('open a table', async t => {
-  const { err, table: _table } = await db.open('test')
+  const { err, data: _table } = await db.open('test')
   t.ok(!err, err && err.message)
 
   table = _table
@@ -72,7 +72,7 @@ test('open a table', async t => {
 })
 
 test('open a table that does not exist', async t => {
-  const { err, table: _table } = await db.open('test-create-if-not-exists', { create: true })
+  const { err, data: _table } = await db.open('test-create-if-not-exists', { create: true })
   t.ok(!err, err && err.message)
   t.ok(_table.db, 'underlying database created and opened')
   t.end()
