@@ -16,6 +16,7 @@ function getDynamoDataType (v) {
       break
     case 'Object': return 'M'
     case 'String': return 'S'
+    case 'Date': return 'S'
     case 'Null': return 'NULL'
     case 'Undefined': return 'NULL'
     case 'Boolean': return 'BOOL'
@@ -48,6 +49,7 @@ function toDynamoJSON (original) {
       }
 
       if (type === 'Number') value = String(value)
+      if (type === 'Date') value = String(value)
       if (type === 'Null') value = true
 
       copy[k] = { [getDynamoDataType(original[k])]: value }
