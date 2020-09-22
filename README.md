@@ -59,6 +59,15 @@ annotate them correctly, so there is no need to write "dynamodb json".
 const { err } = await table.put('glen', 'danzig', { height: 'quite-short' })
 ```
 
+### UPDATE
+
+```js
+const expr = `SET count = count + N(${value})`
+
+const { err, data } = await table.update('iggy', 'pop', expr)
+```
+
+
 ### GET
 
 ```js
