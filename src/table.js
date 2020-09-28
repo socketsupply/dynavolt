@@ -395,7 +395,14 @@ class Table {
           params.ExclusiveStartKey = res.LastEvaluatedKey
         }
 
-        return { value: values[iteratorIndex++] }
+        const value = values[iteratorIndex]
+
+        if (typeof value === 'undefined') {
+          return { done: true }
+        }
+
+        iteratorIndex++
+        return { value }
       }
     }
   }

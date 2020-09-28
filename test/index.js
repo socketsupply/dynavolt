@@ -243,4 +243,18 @@ test('query with a limit (native parameters)', async t => {
   t.end()
 })
 
+test('query that returns nothing', async t => {
+  t.plan(1)
+  const itr = table.query('$(hash) = S(xxx)', { Limit: 3 })
+
+  let count = 0
+
+  for await (const { err, data } of itr) {
+    count++
+    t.ok(err && data)
+  }
+
+  t.equal(count, 0)
+})
+
 test('remote teardown', reset)
