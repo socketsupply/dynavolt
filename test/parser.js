@@ -37,7 +37,7 @@ test('large object', t => {
 
 test('convert dsl to dynamo expression and extract expression attribute values', t => {
   const expected = JSON.stringify({ ':v1': { N: '100' }, ':v2': { S: 'hello' } })
-  const { expression, attributeValues } = queryParser('foo = N(100) AND S(hello)')
+  const { expression, attributeValues } = queryParser('$(foo) = N(100) AND S(hello)')
   t.ok(expected === JSON.stringify(attributeValues))
   t.ok(expression === 'foo = :v1 AND :v2')
   t.end()
