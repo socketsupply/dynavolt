@@ -29,7 +29,7 @@ test('operand > operand', t => {
   const r = queryParser('beep > 10')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 10 } },
+    ExpressionAttributeValues: { ':V1': { N: '10' } },
     ExpressionAttributeNames: { '#V2': 'beep' },
     Expression: '#V2 > :V1'
   })
@@ -41,8 +41,20 @@ test('operand < operand', t => {
   const r = queryParser('beep < 10')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 10 } },
+    ExpressionAttributeValues: { ':V1': { N: '10' } },
     ExpressionAttributeNames: { '#V2': 'beep' },
+    Expression: '#V2 < :V1'
+  })
+
+  t.end()
+})
+
+test('operand < operand', t => {
+  const r = queryParser('n < 10000')
+
+  t.deepEqual(r, {
+    ExpressionAttributeValues: { ':V1': { N: '10000' } },
+    ExpressionAttributeNames: { '#V2': 'n' },
     Expression: '#V2 < :V1'
   })
 
@@ -53,7 +65,7 @@ test('operand = operand<number>', t => {
   const r = queryParser('beep = 10')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 10 } },
+    ExpressionAttributeValues: { ':V1': { N: '10' } },
     ExpressionAttributeNames: { '#V2': 'beep' },
     Expression: '#V2 = :V1'
   })
@@ -65,7 +77,7 @@ test('operand = operand<number> single digit', t => {
   const r = queryParser('beep = 1')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 1 } },
+    ExpressionAttributeValues: { ':V1': { N: '1' } },
     ExpressionAttributeNames: { '#V2': 'beep' },
     Expression: '#V2 = :V1'
   })
@@ -77,7 +89,7 @@ test('operand = operand<number> zero value', t => {
   const r = queryParser('beep = 0')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 0 } },
+    ExpressionAttributeValues: { ':V1': { N: '0' } },
     ExpressionAttributeNames: { '#V2': 'beep' },
     Expression: '#V2 = :V1'
   })
@@ -89,7 +101,7 @@ test('operand = operand<float>', t => {
   const r = queryParser('beep = 10.025')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 10.025 } },
+    ExpressionAttributeValues: { ':V1': { N: '10.025' } },
     ExpressionAttributeNames: { '#V2': 'beep' },
     Expression: '#V2 = :V1'
   })
@@ -125,7 +137,7 @@ test('operand <> operand', t => {
   const r = queryParser('beep <> 10')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 10 } },
+    ExpressionAttributeValues: { ':V1': { N: '10' } },
     ExpressionAttributeNames: { '#V2': 'beep' },
     Expression: '#V2 <> :V1'
   })
@@ -137,7 +149,7 @@ test('operand operator operand conditional', t => {
   const r = queryParser('beep > 10 AND boop = \'barf\'')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { S: 'barf' }, ':V2': { N: 10 } },
+    ExpressionAttributeValues: { ':V1': { S: 'barf' }, ':V2': { N: '10' } },
     ExpressionAttributeNames: { '#V3': 'beep', '#V4': 'boop' },
     Expression: '#V3 > :V2 AND #V4 = :V1'
   })
@@ -149,7 +161,7 @@ test('...respects parens', t => {
   const r = queryParser('beep > 10 AND (boop = \'barf\')')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { S: 'barf' }, ':V2': { N: 10 } },
+    ExpressionAttributeValues: { ':V1': { S: 'barf' }, ':V2': { N: '10' } },
     ExpressionAttributeNames: { '#V3': 'beep', '#V4': 'boop' },
     Expression: '#V3 > :V2 AND (#V4 = :V1)'
   })
@@ -185,7 +197,7 @@ test('multi value set', t => {
   const r = queryParser('SET count = count + 200, foo = 10')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 200 }, ':V2': { N: 10 } },
+    ExpressionAttributeValues: { ':V1': { N: '200' }, ':V2': { N: '10' } },
     ExpressionAttributeNames: { '#V3': 'count', '#V4': 'count', '#V5': 'foo' },
     Expression: 'SET #V3 = #V4 + :V1, #V5 = :V2'
   })
@@ -257,7 +269,7 @@ test('function(path, value<number>)', t => {
   const r = queryParser('contains(beep.boop[1], 100)')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 100 } },
+    ExpressionAttributeValues: { ':V1': { N: '100' } },
     ExpressionAttributeNames: { '#V2': 'beep', '#V3': 'boop' },
     Expression: 'contains(#V2.#V3[1], :V1)'
   })
@@ -269,7 +281,7 @@ test('function(path, value<float>)', t => {
   const r = queryParser('contains(beep.boop[1], 100.00005)')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 100.00005 } },
+    ExpressionAttributeValues: { ':V1': { N: '100.00005' } },
     ExpressionAttributeNames: { '#V2': 'beep', '#V3': 'boop' },
     Expression: 'contains(#V2.#V3[1], :V1)'
   })
@@ -317,7 +329,7 @@ test('...combined with function', t => {
   const r = queryParser('size(foo.bar) AND contains(quxx.bar, 100)')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 100 } },
+    ExpressionAttributeValues: { ':V1': { N: '100' } },
     ExpressionAttributeNames: { '#V2': 'foo', '#V3': 'bar', '#V4': 'quxx', '#V5': 'bar' },
     Expression: 'size(#V2.#V3) AND contains(#V4.#V5, :V1)'
   })
@@ -329,7 +341,7 @@ test('...combined with index', t => {
   const r = queryParser('size(foo.bar[100]) AND contains(quxx.bar[100], 100)')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 100 } },
+    ExpressionAttributeValues: { ':V1': { N: '100' } },
     ExpressionAttributeNames: { '#V2': 'foo', '#V3': 'bar', '#V4': 'quxx', '#V5': 'bar' },
     Expression: 'size(#V2.#V3[100]) AND contains(#V4.#V5[100], :V1)'
   })
@@ -341,7 +353,7 @@ test('between', t => {
   const r = queryParser('foo.borp[1] BETWEEN 10 AND 20')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 10 }, ':V2': { N: 20 } },
+    ExpressionAttributeValues: { ':V1': { N: '10' }, ':V2': { N: '20' } },
     ExpressionAttributeNames: { '#V3': 'foo', '#V4': 'borp' },
     Expression: '#V3.#V4[1] BETWEEN :V1 AND :V2'
   })
@@ -365,7 +377,7 @@ test('delete value<number>', t => {
   const r = queryParser('DELETE burp.borp[1] 10')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 10 } },
+    ExpressionAttributeValues: { ':V1': { N: '10' } },
     ExpressionAttributeNames: { '#V2': 'burp', '#V3': 'borp' },
     Expression: 'DELETE #V2.#V3[1] :V1'
   })
@@ -377,7 +389,7 @@ test('remove value<number>', t => {
   const r = queryParser('REMOVE burp.borp[1] 2')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 2 } },
+    ExpressionAttributeValues: { ':V1': { N: '2' } },
     ExpressionAttributeNames: { '#V2': 'burp', '#V3': 'borp' },
     Expression: 'REMOVE #V2.#V3[1] :V1'
   })
@@ -389,7 +401,7 @@ test('add value<number>', t => {
   const r = queryParser('ADD burp.borp[1] 2')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 2 } },
+    ExpressionAttributeValues: { ':V1': { N: '2' } },
     ExpressionAttributeNames: { '#V2': 'burp', '#V3': 'borp' },
     Expression: 'ADD #V2.#V3[1] :V1'
   })
@@ -401,7 +413,7 @@ test('in list of number', t => {
   const r = queryParser('foo IN (10 20 30)')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 10 }, ':V2': { N: 20 }, ':V3': { N: 30 } },
+    ExpressionAttributeValues: { ':V1': { N: '10' }, ':V2': { N: '20' }, ':V3': { N: '30' } },
     ExpressionAttributeNames: { '#V4': 'foo' },
     Expression: '#V4 IN (:V1 :V2 :V3)'
   })
@@ -437,7 +449,7 @@ test('in with path and path index', t => {
   const r = queryParser('foo.bar[1] IN (10 20 30)')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V1': { N: 10 }, ':V2': { N: 20 }, ':V3': { N: 30 } },
+    ExpressionAttributeValues: { ':V1': { N: '10' }, ':V2': { N: '20' }, ':V3': { N: '30' } },
     ExpressionAttributeNames: { '#V4': 'foo', '#V5': 'bar' },
     Expression: '#V4.#V5[1] IN (:V1 :V2 :V3)'
   })
@@ -450,8 +462,8 @@ test('in with and clause', t => {
 
   t.deepEqual(r, {
     ExpressionAttributeValues: {
-      ':V1': { N: 1 },
-      ':V2': { N: 10 },
+      ':V1': { N: '1' },
+      ':V2': { N: '10' },
       ':V5': { B: 'foo' },
       ':V6': { B: 'b' }
     },

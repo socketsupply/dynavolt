@@ -90,7 +90,7 @@ const RE_BETWEEN = /([^() ]+)\s+BETWEEN\s+/g
 const RE_IN = /([^() ]+)\s+IN\s+/g
 const RE_IN_BIN = /IN\s+\(([^ :#][^()]*)\)/g
 const RE_FUNCTIONS = /(\w+)\((\S+)([,)])/g
-const RE_COMPARATOR = /([^:#(]\w+\S+)\s+([=><+-]{1,2})/g
+const RE_COMPARATOR = /((?:^|[^:#(])\w+)\s+([=><+-]{1,2})/g
 const RE_BINARY = /([=><+-,])\s+([^:# ()]+)/g
 const RE_STRING = /'([^']*)'/g
 
@@ -139,7 +139,7 @@ function queryParser (source) {
   source = source.replace(RE_DIGITS, (_, op, v) => {
     variableIndex++
     const id = `:V${variableIndex}`
-    ExpressionAttributeValues[id] = { N: parseFloat(v) }
+    ExpressionAttributeValues[id] = { N: v }
     return `${op} ${id} `
   })
 
