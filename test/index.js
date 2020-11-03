@@ -109,7 +109,7 @@ test('get', async t => {
 })
 
 test('update a value', async t => {
-  const { err: errUpdate } = await table.update('oregon', 'salem', 'SET $(donuts) = BOOL(false)')
+  const { err: errUpdate } = await table.update('oregon', 'salem', 'SET donuts = false')
   t.ok(!errUpdate, errUpdate && errUpdate.message)
 
   const { err: errGet, data } = await table.get('oregon', 'salem')
@@ -213,7 +213,7 @@ test('count all rows', async t => {
 })
 
 test('query', async t => {
-  const itr = table.query('$(hash) = S(b)')
+  const itr = table.query('hash = \'b\'')
 
   let count = 0
 
@@ -229,7 +229,7 @@ test('query', async t => {
 })
 
 test('query with a limit (native parameters)', async t => {
-  const itr = table.query('$(hash) = S(a)', { Limit: 3 })
+  const itr = table.query('hash = \'a\'', { Limit: 3 })
 
   let count = 0
 
@@ -246,7 +246,7 @@ test('query with a limit (native parameters)', async t => {
 
 test('query that returns nothing', async t => {
   t.plan(1)
-  const itr = table.query('$(hash) = S(xxx)', { Limit: 3 })
+  const itr = table.query('hash = \'xxx\'', { Limit: 3 })
 
   let count = 0
 

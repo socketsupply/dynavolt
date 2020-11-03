@@ -130,9 +130,9 @@ class Table {
     }
 
     const {
-      attributeValues: ExpressionAttributeValues,
-      attributeNames: ExpressionAttributeNames,
-      expression: UpdateExpression
+      ExpressionAttributeValues,
+      ExpressionAttributeNames,
+      Expression: UpdateExpression
     } = queryParser(dsl)
 
     const params = {
@@ -301,16 +301,16 @@ class Table {
 
   iterator (dsl, opts = {}, method) {
     const {
-      expression,
-      attributeValues: ExpressionAttributeValues,
-      attributeNames: ExpressionAttributeNames
+      Expression,
+      ExpressionAttributeValues,
+      ExpressionAttributeNames
     } = queryParser(dsl)
 
     if (!Object.keys(ExpressionAttributeValues).length) {
       throw new Error('Query has no values')
     }
 
-    if (!expression.length) {
+    if (!Expression.length) {
       throw new Error('Query is empty')
     }
 
@@ -322,9 +322,9 @@ class Table {
     }
 
     if (method === 'query') {
-      params.KeyConditionExpression = expression
+      params.KeyConditionExpression = Expression
     } else {
-      params.FilterExpression = expression
+      params.FilterExpression = Expression
     }
 
     let values = []
@@ -342,8 +342,8 @@ class Table {
       },
       filter: async dsl => {
         const {
-          attributeValues: ExpressionAttributeValues,
-          expression: FilterExpression
+          ExpressionAttributeValues,
+          Expression: FilterExpression
         } = queryParser(dsl)
 
         params.FilterExpression = FilterExpression

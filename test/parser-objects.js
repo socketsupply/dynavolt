@@ -1,4 +1,4 @@
-const { queryParser, toJSON, toDynamoJSON } = require('../src/util')
+const { toJSON, toDynamoJSON } = require('../src/util')
 const test = require('@pre-bundled/tape')
 
 test('create dynamo json from regular json', t => {
