@@ -1,5 +1,4 @@
 const TYPE_RE = /\[object (\w+)\]/
-const TYPED_VARIABLES_RE = /(B|BOOL|BS|L|M|N|NS|NULL|S|SS|\$)\(/
 
 function getDataType (v) {
   return Object.prototype.toString.call(v).match(TYPE_RE)[1]
@@ -84,79 +83,136 @@ function toJSON (o) {
   return convert(o)
 }
 
-function recast (type, value) {
-  switch (type) {
-    case 'BOOL': return value === 'true'
-    case 'B': return Buffer.from(value)
-    default: return value
-  }
-}
+const RE_DIGITS = /([ (=><+-]|BETWEEN|AND)\s*(\d+(\.\d+)?)/g
+const RE_OTHER = /([ (=><+-])\s+(null|true|false)/g
+const RE_PAIRS = /(ADD|REMOVE|DELETE)\s+(\w+\S+)\s+/g
+const RE_BETWEEN = /([^() ]+)\s+BETWEEN\s+/g
+const RE_IN = /([^() ]+)\s+IN\s+/g
+const RE_IN_BIN = /IN\s+\(([^ :#][^()]*)\)/g
+const RE_FUNCTIONS = /(\w+)\((\S+)([,)])/g
+const RE_COMPARATOR = /([^:#(]\w+\S+)\s+([=><+-]{1,2})/g
+const RE_BINARY = /([=><+-,])\s+([^:# ()]+)/g
+const RE_STRING = /'([^']*)'/g
 
 function queryParser (source) {
-  if (!source.match(TYPED_VARIABLES_RE)) {
-    return { expression: source } // has no typed variables
-  }
+  source = source.slice().trim()
 
-  source = source.slice()
+  let variableIndex = 0
+  const ExpressionAttributeValues = {}
+  const ExpressionAttributeNames = {}
 
-  if (typeof queryParser.variableIndex === 'undefined') {
-    queryParser.variableIndex = 0
-  }
-
-  let openStates = 0
-  let match = null
-  let expression = ''
-  const attributeValues = {}
-  const attributeNames = {}
-
-  while (source.length) {
-    match = source.match(TYPED_VARIABLES_RE)
-    if (!match) break
-
-    ++queryParser.variableIndex
-    ++openStates
-
-    const index = match.index + match[0].length
-    const type = match[1]
-    const isVariable = type === '$'
-    const symbol = isVariable ? '#' : ':'
-    const name = `${symbol}v${queryParser.variableIndex}`
-    const value = []
-
-    expression += source.slice(0, match.index)
-    source = source.slice(index)
-
-    while (true) {
-      const ch = source[0]
-      source = source.slice(1)
-
-      if (ch === '(') ++openStates
-      if (ch === ')') --openStates
-
-      if (openStates === 0) break
-
-      value.push(ch)
-
-      if (openStates && !ch) {
-        return {
-          err: 'End of string before closing paren',
-          position: source.length
-        }
-      }
-    }
-
-    expression += name
-
-    if (isVariable) {
-      attributeNames[name] = value.join('')
-    } else {
-      attributeValues[name] = { [type]: recast(type, value.join('')) }
+  if (!source.length) {
+    return {
+      Expression: source,
+      ExpressionAttributeNames,
+      ExpressionAttributeValues
     }
   }
 
-  expression += source
+  //
+  // Dynamo property nest spec is #s.#s..., a propery named 's.s'
+  // could be supported if quoted.
+  //
+  const createPath = s => s.split('.').map(str => {
+    const parts = str.split('[')
+    variableIndex++
+    const id = `#V${variableIndex}`
+    ExpressionAttributeNames[id] = parts[0].trim()
+    return id + (parts[1] ? '[' + parts[1] : '')
+  }).join('.')
 
-  return { attributeValues, attributeNames, expression }
+  //
+  // Identify strings first, since they can include subsequences
+  // that we don't want to discover with this pass.
+  //
+  source = source.replace(RE_STRING, (_, v) => {
+    variableIndex++
+    const id = `:V${variableIndex}`
+    ExpressionAttributeValues[id] = { S: v }
+    return id
+  })
+
+  //
+  // Digit literals will always be r-value operands in an expression
+  // ie, = N, > N, + N, - N, < N. except with ADD|REMOVE|DELETE.
+  //
+  source = source.replace(RE_DIGITS, (_, op, v) => {
+    variableIndex++
+    const id = `:V${variableIndex}`
+    ExpressionAttributeValues[id] = { N: parseFloat(v) }
+    return `${op} ${id} `
+  })
+
+  //
+  // In cases where the r-value is null, true or false.
+  //
+  source = source.replace(RE_OTHER, (_, op, v) => {
+    variableIndex++
+    v = v.toLowerCase()
+    const type = v === 'null' ? 'NULL' : 'BOOL'
+    const value = v === 'null' ? true : v === 'true'
+    const id = `:V${variableIndex}`
+    ExpressionAttributeValues[id] = { [type]: value }
+    return `${op} ${id} `
+  })
+
+  source = source.replace(RE_PAIRS, (_, op, v) => {
+    return `${op} ${createPath(v)} `
+  })
+
+  source = source.replace(RE_BETWEEN, (_, v) => {
+    return ` ${createPath(v)} BETWEEN `
+  })
+
+  source = source.replace(RE_IN, (_, v) => {
+    return ` ${createPath(v)} IN `
+  })
+
+  source = source.replace(RE_IN_BIN, (_, values) => {
+    return ' IN ' + values.split(/\s+/).map(v => {
+      variableIndex++
+      const id = `:V${variableIndex}`
+      ExpressionAttributeValues[id] = { B: v }
+      return ` ${id} `
+    }).join(' ')
+  })
+
+  //
+  // paths can be l-values and be suffixed by a comparator
+  //
+  source = source.replace(RE_COMPARATOR, (_, v, op) => {
+    return ` ${createPath(v)} ${op} `
+  })
+
+  //
+  // Binary values are almost the same as digits, but the character
+  // string is anything that does't start with :, #, and isnt whitespace.
+  //
+  source = source.replace(RE_BINARY, (_, op, v) => {
+    variableIndex++
+    const id = `:V${variableIndex}`
+    ExpressionAttributeValues[id] = { B: v }
+    return ` ${op} ${id} `
+  })
+
+  //
+  // Exume function paths
+  //
+  source = source.replace(RE_FUNCTIONS, (_, fname, v, ch) => {
+    return ` ${fname}(${createPath(v)}${ch} `
+  })
+
+  // Tidy
+  source = source.replace(/\s{2,}/g, ' ')
+  source = source.replace(/\s*,/g, ',')
+  source = source.replace(/\(\s*/g, '(')
+  source = source.replace(/\s*\)/g, ')')
+
+  return {
+    ExpressionAttributeValues,
+    ExpressionAttributeNames,
+    Expression: source.trim()
+  }
 }
 
 module.exports = {

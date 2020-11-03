@@ -4,7 +4,8 @@ const test = require('@pre-bundled/tape')
 
 const TEST_CONFIG = { region: 'us-west-2' }
 
-require('./parser')
+require('./parser-objects')
+require('./parser-dsl')
 
 const _dynamo = new AWS.DynamoDB(TEST_CONFIG)
 

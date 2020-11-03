@@ -34,32 +34,3 @@ test('large object', t => {
   t.equal(str, expected)
   t.end()
 })
-
-test('convert dsl to dynamo expression and extract expression attribute values', t => {
-  const expected = JSON.stringify({ ':v1': { N: '100' }, ':v2': { S: 'hello' } })
-  const { expression, attributeValues } = queryParser('$(foo) = N(100) AND S(hello)')
-  t.ok(expected === JSON.stringify(attributeValues))
-  t.ok(expression === 'foo = :v1 AND :v2')
-  t.end()
-})
-
-test('same as last test but tests nesting of parens', t => {
-  const expected = JSON.stringify({ ':v3': { N: '1(0)0' } })
-  const { expression, attributeValues } = queryParser('foo = N(1(0)0)')
-  t.ok(expected === JSON.stringify(attributeValues))
-  t.ok(expression === 'foo = :v3')
-  t.end()
-})
-
-test('mix of names and values', t => {
-  const expected = '{"attributeValues":{":v5":{"S":"foo"}},"attributeNames":{"#v4":"range"},"expression":"#v4 = :v5"}'
-  const o = queryParser('$(range) = S(foo)')
-  t.ok(expected === JSON.stringify(o))
-  t.end()
-})
-
-test('unmatched params should throw', t => {
-  const o = queryParser('foo = N(1(00)')
-  t.ok(o.err, 'should fail')
-  t.end()
-})
