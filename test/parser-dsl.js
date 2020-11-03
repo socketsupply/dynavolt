@@ -61,6 +61,19 @@ test('operand < operand', t => {
   t.end()
 })
 
+test('path', t => {
+  const r = queryParser('foo.bar = \'bazz\'')
+  console.log(r)
+
+  t.deepEqual(r, {
+    ExpressionAttributeValues: { ':V1': { S: 'bazz' } },
+    ExpressionAttributeNames: { '#V2': 'foo', '#V3': 'bar' },
+    Expression: '#V2.#V3 = :V1'
+  })
+
+  t.end()
+})
+
 test('operand = operand<number>', t => {
   const r = queryParser('beep = 10')
 
