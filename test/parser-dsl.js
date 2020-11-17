@@ -218,6 +218,18 @@ test('multi value set', t => {
   t.end()
 })
 
+test('multi value set with function', t => {
+  const r = queryParser('SET count = if_not_exists(count, 0) + 1')
+
+  t.deepEqual(r, {
+    ExpressionAttributeValues: { ':V1': { N: '0' }, ':V2': { N: '1' } },
+    ExpressionAttributeNames: { '#V3': 'count', '#V4': 'count' },
+    Expression: 'SET #V4 = if_not_exists(#V3, :V1) + :V2'
+  })
+
+  t.end()
+})
+
 test('is null value', t => {
   const r = queryParser('foo = null')
 

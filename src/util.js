@@ -168,15 +168,6 @@ function queryParser (source) {
     return ` ${createPath(v)} IN `
   })
 
-  /* source = source.replace(RE_IN_BIN, (_, values) => {
-    return ' IN (' + values.split(/\s+/).map(v => {
-      variableIndex++
-      const id = `:V${variableIndex}`
-      ExpressionAttributeValues[id] = { B: v }
-      return ` ${id} `
-    }).join(' ') + ')'
-  }) */
-
   //
   // Binary values are almost the same as digits, but the character
   // string is anything that does't start with :, #, and isnt whitespace.
@@ -189,17 +180,17 @@ function queryParser (source) {
   })
 
   //
-  // paths can be l-values and be suffixed by a comparator
-  //
-  source = source.replace(RE_COMPARATOR, (_, v, op) => {
-    return ` ${createPath(v)} ${op} `
-  })
-
-  //
   // Exume function paths
   //
   source = source.replace(RE_FUNCTIONS, (_, fname, v, ch) => {
     return ` ${fname}(${createPath(v)}${ch} `
+  })
+
+  //
+  // paths can be l-values and be suffixed by a comparator
+  //
+  source = source.replace(RE_COMPARATOR, (_, v, op) => {
+    return ` ${createPath(v)} ${op} `
   })
 
   // Tidy
