@@ -135,12 +135,12 @@ test('operand = operand<string>', t => {
 })
 
 test('operand = operand<binary>', t => {
-  const r = queryParser('beep = foo')
+  const r = queryParser('beep = <foo>')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V2': { B: 'foo' } },
-    ExpressionAttributeNames: { '#V1': 'beep' },
-    Expression: '#V1 = :V2'
+    ExpressionAttributeValues: { ':V1': { B: 'foo' } },
+    ExpressionAttributeNames: { '#V2': 'beep' },
+    Expression: '#V2 = :V1'
   })
 
   t.end()
@@ -183,24 +183,24 @@ test('...respects parens', t => {
 })
 
 test('binary value', t => {
-  const r = queryParser('foo = SGVsbG8sIFdvcmxkLgo=')
+  const r = queryParser('foo = <SGVsbG8sIFdvcmxkLgo=>')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V2': { B: 'SGVsbG8sIFdvcmxkLgo=' } },
-    ExpressionAttributeNames: { '#V1': 'foo' },
-    Expression: '#V1 = :V2'
+    ExpressionAttributeValues: { ':V1': { B: 'SGVsbG8sIFdvcmxkLgo=' } },
+    ExpressionAttributeNames: { '#V2': 'foo' },
+    Expression: '#V2 = :V1'
   })
 
   t.end()
 })
 
 test('single value set', t => {
-  const r = queryParser('SET foo = bar')
+  const r = queryParser('SET foo = \'bar\'')
 
   t.deepEqual(r, {
-    ExpressionAttributeValues: { ':V2': { B: 'bar' } },
-    ExpressionAttributeNames: { '#V1': 'foo' },
-    Expression: 'SET #V1 = :V2'
+    ExpressionAttributeValues: { ':V1': { S: 'bar' } },
+    ExpressionAttributeNames: { '#V2': 'foo' },
+    Expression: 'SET #V2 = :V1'
   })
 
   t.end()
@@ -303,12 +303,12 @@ test('function(path, value<float>)', t => {
 })
 
 test('function(path, value<binary>)', t => {
-  const r = queryParser('contains(beep.boop[1], bar)')
+  const r = queryParser('contains(beep.boop[1], <bar>)')
 
   t.deepEqual(r, {
     ExpressionAttributeValues: { ':V1': { B: 'bar' } },
-    ExpressionAttributeNames: {},
-    Expression: 'contains(beep.boop[1], :V1)'
+    ExpressionAttributeNames: { '#V2': 'beep', '#V3': 'boop' },
+    Expression: 'contains(#V2.#V3[1], :V1)'
   })
 
   t.end()
@@ -447,12 +447,12 @@ test('in list of string', t => {
 })
 
 test('in list of binary', t => {
-  const r = queryParser('foo IN (beep boop burp)')
+  const r = queryParser('foo IN (<beep> <boop> <burp>)')
 
   t.deepEqual(r, {
     ExpressionAttributeValues: { ':V2': { B: 'beep' }, ':V3': { B: 'boop' }, ':V4': { B: 'burp' } },
     ExpressionAttributeNames: { '#V1': 'foo' },
-    Expression: '#V1 IN :V2 :V3 :V4'
+    Expression: '#V1 IN (:V2 :V3 :V4)'
   })
 
   t.end()
@@ -471,7 +471,7 @@ test('in with path and path index', t => {
 })
 
 test('in with and clause', t => {
-  const r = queryParser('(ProductCategory IN (foo b)) and (Price BETWEEN 1 and 10)')
+  const r = queryParser('(ProductCategory IN (<foo> <b>)) and (Price BETWEEN 1 and 10)')
 
   t.deepEqual(r, {
     ExpressionAttributeValues: {
@@ -481,7 +481,7 @@ test('in with and clause', t => {
       ':V6': { B: 'b' }
     },
     ExpressionAttributeNames: { '#V3': 'Price', '#V4': 'ProductCategory' },
-    Expression: '(#V4 IN :V5 :V6) and (#V3 BETWEEN :V1 and :V2)'
+    Expression: '(#V4 IN (:V5 :V6)) and (#V3 BETWEEN :V1 and :V2)'
   })
 
   t.end()

@@ -88,10 +88,10 @@ const RE_OTHER = /([ (=><+-])\s+(null|true|false)/g
 const RE_PAIRS = /(ADD|REMOVE|DELETE)\s+(\w+\S+)\s+/g
 const RE_BETWEEN = /([^() ]+)\s+BETWEEN\s+/g
 const RE_IN = /([^() ]+)\s+IN\s+/g
-const RE_IN_BIN = /IN\s+\(([^ :#][^()]*)\)/g
+const RE_IN_BIN = /IN\s+\((<[^ >]*>)\)/g
 const RE_FUNCTIONS = /(\w+)\((\S+)([,)])/g
 const RE_COMPARATOR = /((?:^)?[^:# ()]+)\s+([=><+-]{1,2})/g
-const RE_BINARY = /([=><+-,])\s+([^:# ()]+)/g
+const RE_BINARY = /(?:<([^ >]+)>)/g
 const RE_STRING = /'([^']*)'/g
 
 function queryParser (source) {
@@ -168,13 +168,24 @@ function queryParser (source) {
     return ` ${createPath(v)} IN `
   })
 
-  source = source.replace(RE_IN_BIN, (_, values) => {
-    return ' IN ' + values.split(/\s+/).map(v => {
+  /* source = source.replace(RE_IN_BIN, (_, values) => {
+    return ' IN (' + values.split(/\s+/).map(v => {
       variableIndex++
       const id = `:V${variableIndex}`
       ExpressionAttributeValues[id] = { B: v }
       return ` ${id} `
-    }).join(' ')
+    }).join(' ') + ')'
+  }) */
+
+  //
+  // Binary values are almost the same as digits, but the character
+  // string is anything that does't start with :, #, and isnt whitespace.
+  //
+  source = source.replace(RE_BINARY, (_, v) => {
+    variableIndex++
+    const id = `:V${variableIndex}`
+    ExpressionAttributeValues[id] = { B: v }
+    return ` ${id} `
   })
 
   //
@@ -182,17 +193,6 @@ function queryParser (source) {
   //
   source = source.replace(RE_COMPARATOR, (_, v, op) => {
     return ` ${createPath(v)} ${op} `
-  })
-
-  //
-  // Binary values are almost the same as digits, but the character
-  // string is anything that does't start with :, #, and isnt whitespace.
-  //
-  source = source.replace(RE_BINARY, (_, op, v) => {
-    variableIndex++
-    const id = `:V${variableIndex}`
-    ExpressionAttributeValues[id] = { B: v }
-    return ` ${op} ${id} `
   })
 
   //
