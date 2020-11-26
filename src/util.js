@@ -88,11 +88,10 @@ const RE_OTHER = /([ (=><+-])\s+(null|true|false)/g
 const RE_PAIRS = /(ADD|REMOVE|DELETE)\s+(\w+\S+)\s+/g
 const RE_BETWEEN = /([^() ]+)\s+BETWEEN\s+/g
 const RE_IN = /([^() ]+)\s+IN\s+/g
-const RE_IN_BIN = /IN\s+\((<[^ >]*>)\)/g
 const RE_FUNCTIONS = /(\w+)\((\S+)([,)])/g
 const RE_COMPARATOR = /((?:^)?[^:# ()]+)\s+([=><+-]{1,2})/g
 const RE_BINARY = /(?:<([^ >]+)>)/g
-const RE_STRING = /'([^']*)'/g
+const RE_STRING = /'((?:[^'\\]|\\.)*)'/g
 
 function queryParser (source) {
   source = source.slice().trim()
