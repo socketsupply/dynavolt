@@ -17,6 +17,11 @@ class Database {
     this.tables = {}
   }
 
+  /**
+   * @param {string} TableName
+   * @param {object} [opts]
+   * @returns {Promise<{ err?: Error, data?: Table }>}
+   */
   async open (TableName, opts = {}) {
     assert(TableName, 'a table name parameter is required')
 
