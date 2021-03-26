@@ -212,6 +212,23 @@ test('count all rows', async t => {
   t.end()
 })
 
+test('full table scan', async t => {
+  const itr = table.scan('')
+
+  let count = 0
+
+  for await (const { data } of itr) {
+    const { key, value } = data
+    count++
+
+    t.ok(key)
+    t.equal(typeof value, 'object')
+  }
+
+  t.equal(count, 9)
+  t.end()
+})
+
 test('query', async t => {
   const itr = table.query('hash = \'b\'')
 

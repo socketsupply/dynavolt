@@ -306,11 +306,11 @@ class Table {
       ExpressionAttributeNames
     } = queryParser(dsl)
 
-    if (!Object.keys(ExpressionAttributeValues).length) {
+    if (isEmpty(ExpressionAttributeValues) && method !== 'scan') {
       throw new Error('Query has no values')
     }
 
-    if (!Expression.length) {
+    if (!Expression.length && method !== 'scan') {
       throw new Error('Query is empty')
     }
 
@@ -324,7 +324,15 @@ class Table {
     if (method === 'query') {
       params.KeyConditionExpression = Expression
     } else {
-      params.FilterExpression = Expression
+      if (Expression) {
+        params.FilterExpression = Expression
+      }
+      if (isEmpty(params.ExpressionAttributeNames)) {
+        delete params.ExpressionAttributeNames
+      }
+      if (isEmpty(params.ExpressionAttributeValues)) {
+        delete params.ExpressionAttributeValues
+      }
     }
 
     let values = []
@@ -409,3 +417,7 @@ class Table {
 }
 
 module.exports = { Table }
+
+function isEmpty (obj) {
+  return Object.keys(obj).length === 0
+}
