@@ -345,6 +345,9 @@ class Table {
     const rangeType = this.rangeType
 
     return {
+      /**
+       * @returns {AsyncIterator<{ err?: Error, data?: any }>}
+       */
       [Symbol.asyncIterator] () {
         return this
       },
