@@ -241,7 +241,9 @@ class Table {
     }
 
     if (!data.Item) {
-      return { err: { notFound: true } }
+      const err = new Error('Key not found in database')
+      err.notFound = true
+      return { err: err }
     }
 
     return { data: toJSON(data.Item) }
