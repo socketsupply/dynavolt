@@ -1,20 +1,32 @@
-const Dynavolt = require('../src')
+// @ts-check
+'use strict'
+
 const AWS = require('aws-sdk')
 const test = require('@pre-bundled/tape')
+const uuid = require('uuid').v4
+
+const Dynavolt = require('../src')
 
 const TEST_CONFIG = { region: 'us-west-2' }
+
+// const testid = 'temp'
+const testid = uuid()
+const TEST_TABLE = `test_${testid}`
+const TEST_NOT_EXISTS_TABLE = `test-create-if-not-exists_${testid}`
 
 require('./parser-objects')
 require('./parser-dsl')
 
 const _dynamo = new AWS.DynamoDB(TEST_CONFIG)
 
+/** @type {Dynavolt} */
 let db = null
+/** @type {import('../src/table').Table} */
 let table = null
 
 const reset = async t => {
   try {
-    await _dynamo.deleteTable({ TableName: 'test' }).promise()
+    await _dynamo.deleteTable({ TableName: TEST_TABLE }).promise()
   } catch (err) {
     if (err.name !== 'ResourceNotFoundException') {
       t.fail(err.message)
@@ -22,23 +34,7 @@ const reset = async t => {
   }
 
   try {
-    await _dynamo.waitFor('tableNotExists', { TableName: 'test' }).promise()
-  } catch (err) {
-    if (err.name !== 'ResourceNotFoundException') {
-      t.fail(err.message)
-    }
-  }
-
-  try {
-    await _dynamo.deleteTable({ TableName: 'test-create-if-not-exists' }).promise()
-  } catch (err) {
-    if (err.name !== 'ResourceNotFoundException') {
-      t.fail(err.message)
-    }
-  }
-
-  try {
-    await _dynamo.waitFor('tableNotExists', { TableName: 'test-create-if-not-exists' }).promise()
+    await _dynamo.deleteTable({ TableName: TEST_NOT_EXISTS_TABLE }).promise()
   } catch (err) {
     if (err.name !== 'ResourceNotFoundException') {
       t.fail(err.message)
@@ -55,16 +51,16 @@ test('create database instance', t => {
   t.end()
 })
 
-test('remote setup', reset)
-
 test('create a table', async t => {
-  const { err } = await db.create('test')
+  t.comment('create a table started')
+  const { err } = await db.create(TEST_TABLE)
+  t.comment('table created succeeded')
   t.ok(!err, err ? err.message : 'the table was created')
   t.end()
 })
 
 test('open a table', async t => {
-  const { err, data: _table } = await db.open('test')
+  const { err, data: _table } = await db.open(TEST_TABLE)
   t.ok(!err, err && err.message)
 
   table = _table
@@ -72,12 +68,14 @@ test('open a table', async t => {
   t.end()
 })
 
-test('open a table that does not exist', async t => {
-  const { err, data: _table } = await db.open('test-create-if-not-exists', { create: true })
-  t.ok(!err, err && err.message)
-  t.ok(_table.db, 'underlying database created and opened')
-  t.end()
-})
+// test('open a table that does not exist', async t => {
+//   const { err, data: _table } = await db.open(TEST_NOT_EXISTS_TABLE, {
+//     create: true
+//   })
+//   t.ok(!err, err && err.message)
+//   t.ok(_table.db, 'underlying database created and opened')
+//   t.end()
+// })
 
 test('put', async t => {
   const { err } = await table.put('oregon', 'salem', { donuts: true })
@@ -226,6 +224,39 @@ test('full table scan', async t => {
   }
 
   t.equal(count, 9)
+  t.end()
+})
+
+test('table scan from offset', async t => {
+  // Start a scan at the END of [a, ~] to capture all of [b, ...]
+  const itr = table.scan('hash > \'a\'')
+
+  let count = 0
+  const values = []
+
+  for await (const { err, data } of itr) {
+    if (err) throw err
+    const { key, value } = data
+    if (key[0] > 'b') {
+      break
+    }
+
+    count++
+
+    t.ok(key)
+    t.equal(typeof value, 'object')
+
+    values.push({ key, value })
+  }
+
+  t.deepEqual(values, [
+    { key: ['b', 'a'], value: { value: 3 } },
+    { key: ['b', 'c'], value: { value: 3 } },
+    { key: ['b', 'd'], value: { value: 3 } },
+    { key: ['b', 'e'], value: { value: 3 } }
+  ])
+
+  t.equal(count, 4)
   t.end()
 })
 
