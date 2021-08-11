@@ -260,6 +260,45 @@ test('table scan from offset', async t => {
   t.end()
 })
 
+test('scanning a chat/ts style range', async t => {
+  const ops = [
+    ['chat', '1628678141933', { value: 3 }],
+    ['chat', '1628678141935', { value: 3 }],
+    ['chat', '1628678141937', { value: 3 }]
+  ]
+
+  const { errBatch } = await table.batchWrite(ops)
+  t.ok(!errBatch, errBatch && errBatch.message)
+
+  const itr = table.scan('hash = \'chat\' AND range > \'1628678141934\'')
+
+  let count = 0
+  const values = []
+
+  for await (const { err, data } of itr) {
+    if (err) throw err
+    const { key, value } = data
+    if (key[0] > 'chat') {
+      break
+    }
+
+    count++
+
+    t.ok(key)
+    t.equal(typeof value, 'object')
+
+    values.push({ key, value })
+  }
+
+  t.equal(count, 2)
+  t.deepEqual(values, [
+    { key: ['chat', '1628678141935'], value: { value: 3 } },
+    { key: ['chat', '1628678141937'], value: { value: 3 } }
+  ])
+
+  t.end()
+})
+
 test('query', async t => {
   const itr = table.query('hash = \'b\'')
 
