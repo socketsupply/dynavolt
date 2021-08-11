@@ -25,6 +25,7 @@
   "devDependencies": {
     "@pre-bundled/tape": "4.11.0",
     "aws-sdk": "^2.618.0",
-    "npm-bin-deps": "1.4.2"
+    "npm-bin-deps": "1.4.2",
+    "uuid": "3.3.2"
   }
 }
