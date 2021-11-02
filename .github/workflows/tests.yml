@@ -23,5 +23,5 @@ jobs:
       run: ./node_modules/.bin/npr standard && node ./test
       env:
         CI: true
-        AWS_ACCESS_KEY: ${{ secrets.TEST_OPTOOLCO3_ACCESS_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.TEST_OPTOOLCO3_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_OPTOOLCO3_SECRET_KEY }}
