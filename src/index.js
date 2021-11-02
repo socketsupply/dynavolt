@@ -27,7 +27,7 @@ class Database {
   constructor (DynamoDB, opts = {}) {
     assert(DynamoDB, 'the first argument must be a reference to the DynamoDB constructor')
 
-    if ('function' !== typeof DynamoDB && 'function' === typeof DynamoDB.DynamoDB) {
+    if (typeof DynamoDB.DynamoDB === 'function') {
       DynamoDB = DynamoDB.DynamoDB
     }
 
