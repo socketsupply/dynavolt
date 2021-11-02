@@ -1,5 +1,5 @@
 {
-  "name": "dynavolt",
+  "name": "@optoolco/dynavolt",
   "version": "2.1.0",
   "description": "",
   "main": "./src/index.js",
@@ -27,5 +27,8 @@
     "aws-sdk": "^2.618.0",
     "npm-bin-deps": "1.4.2",
     "uuid": "3.3.2"
+  },
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com"
   }
 }
