@@ -6,19 +6,46 @@ const { Table } = require('./table')
 const { getDynamoDataType } = require('./util')
 
 class Database {
+  /**
+   * A static accessor for the `Table` class used by the
+   * `dynavolt` `Database` class.
+   * @public
+   * @static
+   * @accessor
+   * @type {Table}
+   */
+  static get Table () {
+    return Table
+  }
+
+  /**
+   * `Database` class constructor.
+   * @constructor
+   * @param {function} DynamoDB
+   * @param {object} [opts]
+   */
   constructor (DynamoDB, opts = {}) {
     assert(DynamoDB, 'the first argument must be a reference to the DynamoDB constructor')
-    if('function' !== typeof DynamoDB && 'function' === typeof DynamoDB.DynamoDB)
+
+    if ('function' !== typeof DynamoDB && 'function' === typeof DynamoDB.DynamoDB) {
       DynamoDB = DynamoDB.DynamoDB
+    }
+
+    /** @type {function} */
     this.DynamoDB = DynamoDB // hold onto this so the Table class can use it too
+
+    /** @type {import('aws-sdk').DynamoDB} */
     this.db = new DynamoDB(opts)
 
+    /** @type {object=} */
     this.opts = opts
+
     /** @type {{ [key: string]: Table }} */
     this.tables = {}
   }
 
   /**
+   * Opens and returns a database table for this `DynamoDB` instance.
    * @param {string} TableName
    * @param {object} [opts]
    * @returns {Promise<{ err?: Error, data?: Table }>}
@@ -74,6 +101,14 @@ class Database {
     return { data: table }
   }
 
+  /**
+   * Creates a new table for this database.
+   * @param {string} TableName
+   * @param {string} hash
+   * @param {string} range
+   * @param {object} [opts]
+   * @returns {Promise<{ err?: Error, data?: Table }>}
+   */
   async create (TableName, hash = 'hash', range = 'range', opts = {}) {
     assert(TableName, 'a table name parameter is required')
 
