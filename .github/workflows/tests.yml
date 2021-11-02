@@ -1,0 +1,27 @@
+name: Tests
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-16.04
+    timeout-minutes: 5
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: webfactory/ssh-agent
+      uses: webfactory/ssh-agent@v0.4.1
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Use Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+    - name: npm install
+      run: npm install && ./node_modules/.bin/npr which standardx
+    - name: npm test
+      run: npm test
+      env:
+        CI: true
+        TEST_CI_OPTOOLCO3_AWS_ACCESS_KEY: ${{ secrets.TEST_OPTOOLCO3_ACCESS_KEY }}
+        TEST_CI_OPTOOLCO3_AWS_SECRET_KEY: ${{ secrets.TEST_OPTOOLCO3_SECRET_KEY }}
