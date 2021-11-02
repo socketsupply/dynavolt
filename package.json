@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npr standard && node ./test"
+    "test": "npr standard && AWS_PROFILE=optoolco3 node ./test"
   },
   "repository": {
     "type": "git",
