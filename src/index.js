@@ -7,8 +7,9 @@ const { getDynamoDataType } = require('./util')
 
 class Database {
   constructor (DynamoDB, opts = {}) {
-    assert(DynamoDB, 'the first argument must be a reference to the aws-sdk')
-
+    assert(DynamoDB, 'the first argument must be a reference to the DynamoDB constructor')
+    if('function' !== typeof DynamoDB && 'function' === typeof DynamoDB.DynamoDB)
+      DynamoDB = DynamoDB.DynamoDB
     this.DynamoDB = DynamoDB // hold onto this so the Table class can use it too
     this.db = new DynamoDB(opts)
 
