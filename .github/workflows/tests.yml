@@ -20,8 +20,8 @@ jobs:
     - name: npm install
       run: npm install && ./node_modules/.bin/npr which standardx
     - name: npm test
-      run: npm test
+      run: npr standard && node ./test
       env:
         CI: true
-        TEST_CI_OPTOOLCO3_AWS_ACCESS_KEY: ${{ secrets.TEST_OPTOOLCO3_ACCESS_KEY }}
-        TEST_CI_OPTOOLCO3_AWS_SECRET_KEY: ${{ secrets.TEST_OPTOOLCO3_SECRET_KEY }}
+        AWS_ACCESS_KEY: ${{ secrets.TEST_OPTOOLCO3_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_OPTOOLCO3_SECRET_KEY }}
