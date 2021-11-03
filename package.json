@@ -1,5 +1,5 @@
 {
-  "name": "@optoolco/dynavolt",
+  "name": "@operatortc/dynavolt",
   "version": "2.1.0",
   "description": "",
   "main": "./src/index.js",
@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/optoolco/dynavolt.git"
+    "url": "git+https://github.com/operatortc/dynavolt.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/optoolco/dynavolt/issues"
+    "url": "https://github.com/operatortc/dynavolt/issues"
   },
-  "homepage": "https://github.com/optoolco/dynavolt#readme",
+  "homepage": "https://github.com/operatortc/dynavolt#readme",
   "binDependencies": {
     "standard": "14.3.1"
   },
