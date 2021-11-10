@@ -1,3 +1,4 @@
+// @ts-check
 'use strict'
 
 const assert = require('assert')
@@ -5,52 +6,59 @@ const assert = require('assert')
 const { Table } = require('./table')
 const { getDynamoDataType } = require('./util')
 
+/**
+ * @implements {dynavolt.IDatabase}
+ * */
 class Database {
   /**
    * A static accessor for the `Table` class used by the
    * `dynavolt` `Database` class.
-   * @public
-   * @static
-   * @accessor
-   * @type {Table}
+   * @type {dynavolt.Constructors.Table}
    */
   static get Table () {
+    // @ts-ignore
     return Table
   }
 
   /**
    * `Database` class constructor.
    * @constructor
-   * @param {function} DynamoDB
-   * @param {object} [opts]
+   * @param {dynavolt.DatabaseDynamoDBOption} DynamoDB
+   * @param {dynavolt.DatabaseOptions} [opts]
    */
   constructor (DynamoDB, opts = {}) {
-    assert(DynamoDB, 'the first argument must be a reference to the DynamoDB constructor')
+    assert(
+      typeof DynamoDB === 'function' ||
+      (DynamoDB && typeof DynamoDB.DynamoDB === 'function'),
+      'the first argument must be a reference to the DynamoDB constructor'
+    )
 
-    if (typeof DynamoDB.DynamoDB === 'function') {
+    // @ts-ignore
+    if (DynamoDB && typeof DynamoDB.DynamoDB === 'function') {
+      // @ts-ignore
       DynamoDB = DynamoDB.DynamoDB
     }
 
-    /** @type {function} */
+    /** @type {dynavolt.Constructors.DynamoDB} */ // @ts-ignore
     this.DynamoDB = DynamoDB // hold onto this so the Table class can use it too
 
-    /** @type {import('aws-sdk').DynamoDB} */
-    this.db = new DynamoDB(opts)
+    /** @type {AWS.DynamoDB} */
+    this.db = new this.DynamoDB(opts)
 
-    /** @type {object=} */
-    this.opts = opts
+    /** @type {dynavolt.DatabaseOptions} */
+    this.opts = opts || {}
 
-    /** @type {{ [key: string]: Table }} */
+    /** @type {dynavolt.OpenedDatabaseTables} */
     this.tables = {}
   }
 
   /**
    * Opens and returns a database table for this `DynamoDB` instance.
    * @param {string} TableName
-   * @param {object} [opts]
-   * @returns {Promise<{ err?: Error, data?: Table }>}
+   * @param {dynavolt.OpenTableOptions} [opts]
+   * @returns {dynavolt.Result<dynavolt.ITable>}
    */
-  async open (TableName, opts = {}) {
+  async open (TableName, opts = { }) {
     assert(TableName, 'a table name parameter is required')
 
     const existing = this.tables[TableName]
@@ -59,18 +67,20 @@ class Database {
       return { data: existing } // the table is already "open".
     }
 
-    const table = this.tables[TableName] = new Table(this.DynamoDB, this.opts, opts)
+    /** @type {dynavolt.ITable} */
+    const table = new Table(this.DynamoDB, this.opts, opts)
+    this.tables[TableName] = table
 
     try {
-      const { Table } = await this.db.describeTable({ TableName }).promise()
-      table.meta = Table
+      const result = await this.db.describeTable({ TableName }).promise()
+      table.meta = result.Table || null
     } catch (err) {
-      if (err.name !== 'ResourceNotFoundException') {
+      if (err instanceof Error && err.name !== 'ResourceNotFoundException') {
         return { err }
       }
 
       if (!opts.create) {
-        return { err }
+        return { err: /** @type {Error} */ (err) }
       }
 
       const { err: errCreate } = await this.create(TableName)
@@ -82,20 +92,33 @@ class Database {
       return this.open(TableName, opts)
     }
 
+    if (!table.meta) {
+      return { data: table }
+    }
+
     const schema = table.meta.KeySchema
     const defs = table.meta.AttributeDefinitions
 
-    const hash = schema.find(o => o.KeyType === 'HASH')
-    const range = schema.find(o => o.KeyType === 'RANGE')
+    if (schema && defs) {
+      const hash = schema.find(o => o.KeyType === 'HASH')
+      const range = schema.find(o => o.KeyType === 'RANGE')
 
-    const keyDef = defs.find(o => o.AttributeName === hash.AttributeName)
-    table.hashKey = hash.AttributeName
-    table.hashType = keyDef.AttributeType
+      if (hash) {
+        table.hashKey = hash.AttributeName
+        const keyDef = defs.find(o => o.AttributeName === hash.AttributeName)
+        if (keyDef) {
+          table.hashType = keyDef.AttributeType
+        }
+      }
 
-    if (range) {
-      const rangeDef = defs.find(o => o.AttributeName === range.AttributeName)
-      table.rangeKey = range.AttributeName
-      table.rangeType = rangeDef.AttributeType
+      if (range) {
+        const rangeDef = defs.find(o => o.AttributeName === range.AttributeName)
+        table.rangeKey = range.AttributeName
+
+        if (rangeDef) {
+          table.rangeType = rangeDef.AttributeType
+        }
+      }
     }
 
     return { data: table }
@@ -106,12 +129,13 @@ class Database {
    * @param {string} TableName
    * @param {string} hash
    * @param {string} range
-   * @param {object} [opts]
-   * @returns {Promise<{ err?: Error, data?: Table }>}
+   * @param {dynavolt.CreateTableOptions} [opts]
+   * @returns {dynavolt.Result<dynavolt.IDatabase>}
    */
   async create (TableName, hash = 'hash', range = 'range', opts = {}) {
     assert(TableName, 'a table name parameter is required')
 
+    /** @type {AWS.DynamoDB.CreateTableInput} */
     const params = {
       TableName,
       AttributeDefinitions: [{
@@ -158,37 +182,44 @@ class Database {
     try {
       await this.db.createTable(params).promise()
     } catch (err) {
-      return { err }
+      return { err: /** @type {Error} */ (err) }
     }
 
     try {
       await this.db.waitFor('tableExists', { TableName }).promise()
     } catch (err) {
-      return { err }
+      return { err: /** @type {Error} */ (err) }
     }
 
     while (true) {
+      /** @type {AWS.DynamoDB.Types.DescribeTableOutput} */
       let data = {}
 
       try {
         data = await this.db.describeTable({ TableName }).promise()
       } catch (err) {
-        return { err }
+        return { err: /** @type {Error} */ (err) }
       }
 
-      if (data.Table.TableStatus !== 'ACTIVE') {
+      if (data.Table && data.Table.TableStatus !== 'ACTIVE') {
         await sleep(2e3)
       } else {
         break
       }
     }
 
+    // @ts-ignore
     return { data: this }
   }
 }
 
 module.exports = Database
 
+/**
+ * Waits `n` milliseconds before resolving.
+ * @param {number} n
+ * @return {Promise<void>}
+ */
 async function sleep (n) {
   return new Promise(resolve => setTimeout(resolve, n))
 }

@@ -85,13 +85,20 @@ test('put', async t => {
 })
 
 test('put complex', async t => {
-  const { err } = await table.put('oregon', 'portland', { donuts: { a: { b: { c: 100 } } }, ax: ['quxx', 'beep', 'boop'], n: 100 })
+  const { err } = await table.put('oregon', 'portland', {
+    donuts: {
+      a: { b: { c: 100 } }
+    },
+    ax: ['quxx', 'beep', 'boop'],
+    n: 100
+  })
 
   t.ok(!err, err && err.message)
   t.end()
 })
 
 test('put more complex', async t => {
+  // @ts-ignore
   const { err } = await table.put('oregon', 'bend', require('./fixture.json'))
 
   t.ok(!err, err && err.message)
