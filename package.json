@@ -9,6 +9,8 @@
   "scripts": {
     "test": "npr standard && AWS_PROFILE=optoolco3 node ./test"
   },
+  "types": "index.d.ts",
+  "typings": "index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/operatortc/dynavolt.git"
@@ -24,11 +26,12 @@
   },
   "devDependencies": {
     "@pre-bundled/tape": "4.11.0",
+    "@types/node": "^16.11.7",
     "aws-sdk": "^2.618.0",
     "npm-bin-deps": "1.4.2",
     "uuid": "3.3.2"
   },
   "publishConfig": {
-    "registry":"https://npm.pkg.github.com"
+    "registry": "https://npm.pkg.github.com"
   }
 }

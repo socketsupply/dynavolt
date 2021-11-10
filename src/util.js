@@ -1,9 +1,23 @@
+// @ts-check
+'use strict'
+
 const TYPE_RE = /\[object (\w+)\]/
 
+/**
+ * Returns the internal class as a string data type.
+ * @param {any} v
+ * @return {string?}
+ */
 function getDataType (v) {
-  return Object.prototype.toString.call(v).match(TYPE_RE)[1]
+  const match = Object.prototype.toString.call(v).match(TYPE_RE)
+  return match ? match[1] : null
 }
 
+/**
+ * Returns the "DynamoDB" data type as a string for a given value.
+ * @param {any} v
+ * @return {string}
+ */
 function getDynamoDataType (v) {
   switch (getDataType(v)) {
     case 'Array':
@@ -22,11 +36,18 @@ function getDynamoDataType (v) {
     case 'Number': return 'N'
     case 'Uint8Array': return 'B'
   }
+
+  return 'NULL'
 }
 
+/**
+ * @param {string|object|boolean|number} original
+ * @return {object}
+ */
 function toDynamoJSON (original) {
   const copy = JSON.parse(JSON.stringify(original))
 
+  /** @ts-ignore */
   const convert = (copy, original) => {
     for (const [k, v] of Object.entries(copy)) {
       const type = getDataType(original[k])
@@ -40,7 +61,7 @@ function toDynamoJSON (original) {
       if (type === 'Array') {
         const typeOfFirstItem = getDataType(original[k][0])
 
-        if (['Object', 'Array'].includes(typeOfFirstItem)) {
+        if (typeOfFirstItem && ['Object', 'Array'].includes(typeOfFirstItem)) {
           value = convert(v, original[k])
         } else {
           value = original[k]
@@ -60,7 +81,12 @@ function toDynamoJSON (original) {
   return convert(copy, original)
 }
 
+/**
+ * @param {object|string|boolean} o
+ * @return {object}
+ */
 function toJSON (o) {
+  /** @ts-ignore */
   const convert = o => {
     for (const [k, v] of Object.entries(o)) {
       const type = Object.keys(o[k])[0]
@@ -93,11 +119,22 @@ const RE_COMPARATOR = /((?:^)?[^:# ()]+)\s+([=><+-]{1,2})/g
 const RE_BINARY = /(?:<([^ >]+)>)/g
 const RE_STRING = /'((?:[^'\\]|\\.)*)'/g
 
+/**
+ * Parses source query string into an expression object.
+ * @param {string} source
+ * @return {{
+ *   Expression: string,
+ *   ExpressionAttributeNames: AWS.DynamoDB.ExpressionAttributeNameMap,
+ *   ExpressionAttributeValues: AWS.DynamoDB.ExpressionAttributeValueMap
+ * }}
+ */
 function queryParser (source) {
   source = source.slice().trim()
 
   let variableIndex = 0
+  /** @type {AWS.DynamoDB.ExpressionAttributeValueMap} */
   const ExpressionAttributeValues = {}
+  /** @type {AWS.DynamoDB.ExpressionAttributeNameMap} */
   const ExpressionAttributeNames = {}
 
   if (!source.length) {
@@ -112,7 +149,8 @@ function queryParser (source) {
   // Dynamo property nest spec is #s.#s..., a propery named 's.s'
   // could be supported if quoted.
   //
-  const createPath = s => s.split('.').map(str => {
+  /** @type {(s: string) => string} */
+  const createPath = s => s.split('.').map((/** @type {string} */ str) => {
     const parts = str.split('[')
     variableIndex++
     const id = `#V${variableIndex}`
