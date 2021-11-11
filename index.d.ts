@@ -233,8 +233,10 @@ export interface ITable {
     opts?: TableCountOptions
   ): TableCountResult;
 
-  delete (hash: string, range: string): Result<void>;
-  delete (hash: string, range: string, props: object): Result<void>;
+  delete (
+    hash: Types.Hash,
+    range: Types.Range
+  ): Result<void>;
 
   get (
     hash: Types.Hash,
