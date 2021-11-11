@@ -15,7 +15,7 @@ export namespace Types {
    * A simple JSON type.
    */
   export type JSON =
-    null|number| string| boolean| Array<JSON>|{ [key: string]: JSON };
+    null|number|string|boolean|Array<JSON>|{[key: string]: JSON};
 
   /**
    * A scalar type for a `hash`.
@@ -128,8 +128,7 @@ export type TableBatchWriteInput = Array<[Types.Hash, Types.Range, JSON]>;
  * Options for `batchWrite()` that extends
  * `AWS.DynamoDB.BatchWriteItemRequestMap`.
  */
-export type TableBatchWriteOptions = AWS.DynamoDB.BatchWriteItemRequestMap & {
-}
+export type TableBatchWriteOptions = AWS.DynamoDB.BatchWriteItemRequestMap & {}
 
 /**
  * Input typing for `batchRead()` on a `Table` class instance.
@@ -142,8 +141,7 @@ export type TableBatchReadInput = Array<[Types.Hash, Types.Range]>;
  */
 export type TableBatchReadOptions = Omit<AWS.DynamoDB.Types.BatchGetItemInput,
   'RequestItems'
-> & {
-}
+> & {}
 
 /**
  * Options for `update()` on a `Table` class instance that extends
@@ -151,8 +149,7 @@ export type TableBatchReadOptions = Omit<AWS.DynamoDB.Types.BatchGetItemInput,
  */
 export type TableUpdateOptions = Omit<AWS.DynamoDB.UpdateItemInput,
   'TableName'|'Key'
-> & {
-}
+> & {}
 
 /**
  * Options for `count()` on a `Table` class instance that extends
@@ -160,8 +157,7 @@ export type TableUpdateOptions = Omit<AWS.DynamoDB.UpdateItemInput,
  */
 export type TableCountOptions = Omit<AWS.DynamoDB.DescribeTableInput,
   'TableName'
-> & {
-}
+> & {}
 
 /**
  * A special result type for  `count()` return value on a `Table`
@@ -179,8 +175,7 @@ export type TableCountResult<E = Error> = Promise<{
  */
 export type TableGetOptions = Omit<AWS.DynamoDB.Types.GetItemInput,
   'Key'|'TableName'
-> & {
-}
+> & {}
 
 /**
  * Input for `put()` on a `Table` class instance.
@@ -195,14 +190,12 @@ export type TablePutInput = {
  */
 export type TablePutOptions = Omit<AWS.DynamoDB.Types.PutItemInput,
   'Item'|'TableName'
-> & {
-}
+> & {}
 
 export type TableIteratorOptions = Omit<
   AWS.DynamoDB.QueryInput & AWS.DynamoDB.ScanInput,
   'ExpressionAttributeValues'|'ExpressionAttributeNames'|'TableName'
-> & {
-}
+> & {}
 
 /**
  * An interface for the iterator used by `Table`.

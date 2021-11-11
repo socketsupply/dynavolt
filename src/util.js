@@ -47,7 +47,7 @@ function getDynamoDataType (v) {
 function toDynamoJSON (original) {
   const copy = JSON.parse(JSON.stringify(original))
 
-  /** @ts-ignore */
+  // @ts-ignore
   const convert = (copy, original) => {
     for (const [k, v] of Object.entries(copy)) {
       const type = getDataType(original[k])
@@ -86,7 +86,7 @@ function toDynamoJSON (original) {
  * @return {object}
  */
 function toJSON (o) {
-  /** @ts-ignore */
+  // @ts-ignore
   const convert = o => {
     for (const [k, v] of Object.entries(o)) {
       const type = Object.keys(o[k])[0]

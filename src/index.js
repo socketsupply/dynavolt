@@ -6,9 +6,7 @@ const assert = require('assert')
 const { Table } = require('./table')
 const { getDynamoDataType } = require('./util')
 
-/**
- * @implements {dynavolt.IDatabase}
- * */
+/** @implements {dynavolt.IDatabase} */
 class Database {
   /**
    * A static accessor for the `Table` class used by the
@@ -39,8 +37,8 @@ class Database {
       DynamoDB = DynamoDB.DynamoDB
     }
 
-    /** @type {dynavolt.Constructors.DynamoDB} */ // @ts-ignore
-    this.DynamoDB = DynamoDB // hold onto this so the Table class can use it too
+    // hold onto this so the Table class can use it too
+    this.DynamoDB = /** @type {dynavolt.Constructors.DynamoDB} */ (DynamoDB)
 
     /** @type {AWS.DynamoDB} */
     this.db = new this.DynamoDB(opts)

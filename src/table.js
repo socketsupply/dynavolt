@@ -332,9 +332,9 @@ class Table {
 
     /** @type {AWS.DynamoDB.Types.GetItemInput} */
     const params = {
-      /** @ts-ignore */
+      // @ts-ignore
       Key: this.createKeyProperties(hash, range),
-      /** @ts-ignore */
+      // @ts-ignore
       TableName: this.meta?.TableName,
       ...opts
     }
@@ -473,7 +473,7 @@ class Table {
 
     /** @type {AWS.DynamoDB.QueryInput & AWS.DynamoDB.ScanInput} */
     const params = {
-      /** @ts-ignore */
+      // @ts-ignore
       TableName: this.meta?.TableName,
       /** @type {AWS.DynamoDB.ExpressionAttributeValueMap} */
       ExpressionAttributeValues,
@@ -562,7 +562,7 @@ class Table {
             return { data: { key, value: toJSON(item) } }
           })
 
-          /** @ts-ignore */
+          // @ts-ignore
           values = [...values, ...restructured]
         }
 
