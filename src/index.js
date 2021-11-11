@@ -6,7 +6,11 @@ const assert = require('assert')
 const { Table } = require('./table')
 const { getDynamoDataType } = require('./util')
 
-/** @implements {dynavolt.IDatabase} */
+/**
+ * A high level container for a DynamoDB database.
+ * @extends {dynavolt.Database}
+ * @implements {dynavolt.IDatabase}
+ */
 class Database {
   /**
    * A static accessor for the `Table` class used by the
@@ -212,6 +216,8 @@ class Database {
 }
 
 module.exports = Database
+module.exports.default = Database
+module.exports.Database = Database
 
 /**
  * Waits `n` milliseconds before resolving.

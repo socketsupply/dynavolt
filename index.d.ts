@@ -181,7 +181,6 @@ export type TableGetOptions = Omit<AWS.DynamoDB.Types.GetItemInput,
  * Input for `put()` on a `Table` class instance.
  */
 export type TablePutInput = {
-  [key: string]: JSON
 }
 
 /**
@@ -235,7 +234,7 @@ export interface ITable {
     hash: Types.Hash,
     range: Types.Range,
     opts?: TableGetOptions
-  ): Result<object>;
+  ): Result<any>;
 
   put (
     hash: Types.Hash,
@@ -296,18 +295,6 @@ export interface ITable {
 }
 
 /**
- * An interface for a `Table` class instance that contains the constructor
- * function signature for the `new` operator.
- */
-export interface Table extends ITable {
-  new (
-    DynamoDB: Constructors.DynamoDB,
-    dbOpts?: AWS.DynamoDB.Types.ClientConfiguration,
-    opts?: TableOptions
-  ): ITable;
-}
-
-/**
  * An interface for a `Database` class instance.
  */
 export interface IDatabase {
@@ -333,11 +320,123 @@ export interface IDatabase {
  * An interface for a `Database` class instance that contains the constructor
  * function signature for the `new` operator.
  */
-export interface Database extends IDatabase {
-  new (
+export class Database implements IDatabase {
+  db: AWS.DynamoDB;
+  opts: DatabaseOptions;
+  tables: OpenTableOptions;
+  DynamoDB: Constructors.DynamoDB;
+
+  constructor (
     DynamoDB: Constructors.DynamoDB,
     opts: DatabaseOptions
-  ): IDatabase;
+  );
+
+  open (
+    tableName: string,
+    opts?: OpenTableOptions
+  ): Result<ITable>;
+
+  create (
+    tableName: string,
+    hash?: Types.Hash,
+    range?: Types.Range,
+    opts?: CreateTableOptions
+  ): Result<IDatabase>;
+}
+
+/**
+ * An interface for a `Table` class instance that contains the constructor
+ * function signature for the `new` operator.
+ */
+export class Table implements ITable {
+  disableATD: boolean;
+  meta: AWS.DynamoDB.Types.TableDescription | null;
+  db: AWS.DynamoDB;
+
+  hashType: string | null;
+  hashKey: string | null;
+
+  rangeType: string | null;
+  rangeKey: string | null;
+
+  constructor (
+    DynamoDB: Constructors.DynamoDB,
+    dbOpts?: AWS.DynamoDB.Types.ClientConfiguration,
+    opts?: TableOptions
+  );
+
+  count (
+    isManualCount: boolean,
+    opts?: TableCountOptions
+  ): TableCountResult;
+
+  delete (
+    hash: Types.Hash,
+    range: Types.Range
+  ): Result<void>;
+
+  get (
+    hash: Types.Hash,
+    range: Types.Range,
+    opts?: TableGetOptions
+  ): Result<any>;
+
+  put (
+    hash: Types.Hash,
+    range: Types.Range,
+    props: TablePutInput,
+    opts?: TablePutOptions
+  ): Result<void>;
+
+  putNew (
+    hash: Types.Hash,
+    range: Types.Range,
+    props: TablePutInput,
+    opts?: TablePutOptions
+  ): Result<void>;
+
+  update (
+    hash: Types.Hash,
+    range: Types.Range,
+    dsl: Types.Query,
+    opts?: TableUpdateOptions
+  ): Result<AWS.DynamoDB.AttributeMap>;
+
+  scan (
+    dsl: Types.Query,
+    opts?: TableIteratorOptions
+  ): ITableIterator;
+
+  query (
+    dsl: Types.Query,
+    opts?: TableIteratorOptions
+  ): ITableIterator;
+
+  iterator (
+    dsl: Types.Query,
+    opts: TableIteratorOptions,
+    method: Types.IteratorMethod
+  ): ITableIterator;
+
+  batchRead (
+    batch: TableBatchReadInput,
+    opts?: TableBatchReadOptions
+  ): Result<object>;
+
+  batchWrite (
+    batch: TableBatchWriteInput,
+    opts?: TableBatchWriteOptions
+  ): Result<void>;
+
+  setTTL (
+    attributeName?: string,
+    enabled?: boolean
+  ): Result<ITable>;
+
+  createKeyProperties (
+    hash: Types.Hash,
+    range: Types.Range
+  ): TableKeyProperties;
 }
 
 export as namespace dynavolt

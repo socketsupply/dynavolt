@@ -3,7 +3,11 @@
 
 const { queryParser, toJSON, toDynamoJSON } = require('./util')
 
-/** @implements {dynavolt.ITable} */
+/**
+ * A high level container for a DynamoDB database table.
+ * @extends {dynavolt.Table}
+ * @implements {dynavolt.ITable}
+ */
 class Table {
   /**
    * `Table` class constructor.
@@ -61,7 +65,7 @@ class Table {
    * Sets the TTL for the table.
    * @param {string} [AttributeName]
    * @param {boolean} [Enabled]
-   * @return {dynavolt.Result<dynavolt.Table>}
+   * @return {dynavolt.Result<dynavolt.ITable>}
    */
   async setTTL (AttributeName = 'ttl', Enabled = true) {
     if (!this.meta || !this.meta.TableName) {
@@ -323,7 +327,7 @@ class Table {
    * @param {dynavolt.Types.Hash} hash
    * @param {dynavolt.Types.Range} range
    * @param {dynavolt.TableGetOptions} [opts]
-   * @return {dynavolt.Result<object>}
+   * @return {dynavolt.Result<any>}
    */
   async get (hash, range, opts = {}) {
     if (typeof range !== 'string') {
