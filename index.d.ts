@@ -439,4 +439,8 @@ export class Table implements ITable {
   ): TableKeyProperties;
 }
 
+declare module "@operatortc/dynavolt" {
+  export = Database;
+}
+
 export as namespace dynavolt
