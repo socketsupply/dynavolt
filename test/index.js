@@ -2,7 +2,7 @@
 'use strict'
 
 const AWS = require('aws-sdk')
-const test = require('@pre-bundled/tape')
+const { test } = require('tapzero')
 const uuid = require('uuid').v4
 
 const Dynavolt = require('../src')
@@ -40,15 +40,12 @@ const reset = async t => {
       t.fail(err.message)
     }
   }
-
-  t.end()
 }
 
 test('create database instance', t => {
   db = new Dynavolt(AWS.DynamoDB, TEST_CONFIG)
   t.ok(db.open, 'has open method')
   t.ok(db.create, 'has create method')
-  t.end()
 })
 
 test('create a table', async t => {
@@ -56,7 +53,6 @@ test('create a table', async t => {
   const { err } = await db.create(TEST_TABLE)
   t.comment('table created succeeded')
   t.ok(!err, err ? err.message : 'the table was created')
-  t.end()
 })
 
 test('open a table', async t => {
@@ -65,7 +61,6 @@ test('open a table', async t => {
 
   table = _table
   t.ok(table, 'the table was opened')
-  t.end()
 })
 
 // test('open a table that does not exist', async t => {
@@ -74,14 +69,13 @@ test('open a table', async t => {
 //   })
 //   t.ok(!err, err && err.message)
 //   t.ok(_table.db, 'underlying database created and opened')
-//   t.end()
+//
 // })
 
 test('put', async t => {
   const { err } = await table.put('oregon', 'salem', { donuts: true })
 
   t.ok(!err, err && err.message)
-  t.end()
 })
 
 test('put complex', async t => {
@@ -94,7 +88,6 @@ test('put complex', async t => {
   })
 
   t.ok(!err, err && err.message)
-  t.end()
 })
 
 test('put more complex', async t => {
@@ -102,7 +95,6 @@ test('put more complex', async t => {
   const { err } = await table.put('oregon', 'bend', require('./fixture.json'))
 
   t.ok(!err, err && err.message)
-  t.end()
 })
 
 test('get', async t => {
@@ -110,7 +102,6 @@ test('get', async t => {
 
   t.ok(!err, err && err.message)
   t.ok(data.donuts === true, 'there are donuts in salem oregon')
-  t.end()
 })
 
 test('update a value', async t => {
@@ -121,7 +112,6 @@ test('update a value', async t => {
   t.ok(!errGet, errGet && errGet.message)
 
   t.ok(data.donuts === false, 'there are donuts in salem oregon')
-  t.end()
 })
 
 test('get a value that does not exist', async t => {
@@ -129,14 +119,12 @@ test('get a value that does not exist', async t => {
 
   t.ok(err.notFound, 'not found')
   t.ok(!data, 'there are not witches in oregon')
-  t.end()
 })
 
 test('put if not exists', async t => {
   const { err } = await table.putNew('oregon', 'salem', { donuts: true })
 
   t.ok(err.exists, 'exits')
-  t.end()
 })
 
 test('delete and verify its been remove', async t => {
@@ -149,14 +137,12 @@ test('delete and verify its been remove', async t => {
     const { err, data } = await table.get('oregon', 'salem')
     t.ok(err.notFound)
     t.ok(!data)
-    t.end()
   }
 })
 
 test('delete a key that does not exist', async t => {
   const { err } = await table.get('foo', 'bar')
   t.ok(err.notFound)
-  t.end()
 })
 
 test('batch write', async t => {
@@ -170,7 +156,6 @@ test('batch write', async t => {
 
   const { err } = await table.batchWrite(ops)
   t.ok(!err, err && err.message)
-  t.end()
 })
 
 test('batch read', async t => {
@@ -186,7 +171,6 @@ test('batch read', async t => {
   t.ok(!err, err && err.message)
   t.ok(Array.isArray(data), 'got an array of values')
   t.ok(data.length === 5, 'correct number of items')
-  t.end()
 })
 
 test('batch write with deletes', async t => {
@@ -206,15 +190,12 @@ test('batch write with deletes', async t => {
 
   const { err: errGet } = await table.get('b', 'b')
   t.ok(errGet.notFound, 'the record was removed')
-
-  t.end()
 })
 
 test('count all rows', async t => {
   const { err, data } = await table.count(true)
   t.ok(!err, err && err.message)
   t.equal(data, 9, 'count is correct')
-  t.end()
 })
 
 test('full table scan', async t => {
@@ -231,7 +212,6 @@ test('full table scan', async t => {
   }
 
   t.equal(count, 9)
-  t.end()
 })
 
 test('table scan from offset', async t => {
@@ -264,7 +244,6 @@ test('table scan from offset', async t => {
   ])
 
   t.equal(count, 4)
-  t.end()
 })
 
 test('scanning a chat/ts style range', async t => {
@@ -302,8 +281,6 @@ test('scanning a chat/ts style range', async t => {
     { key: ['chat', '1628678141935'], value: { value: 3 } },
     { key: ['chat', '1628678141937'], value: { value: 3 } }
   ])
-
-  t.end()
 })
 
 test('query', async t => {
@@ -319,7 +296,6 @@ test('query', async t => {
   }
 
   t.ok(count === 4)
-  t.end()
 })
 
 test('query with a limit (native parameters)', async t => {
@@ -335,11 +311,9 @@ test('query with a limit (native parameters)', async t => {
   }
 
   t.ok(count === 3)
-  t.end()
 })
 
 test('query that returns nothing', async t => {
-  t.plan(1)
   const itr = table.query('hash = \'xxx\'', { Limit: 3 })
 
   let count = 0
