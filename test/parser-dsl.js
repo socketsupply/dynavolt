@@ -158,6 +158,17 @@ test('operand <> operand', t => {
   t.end()
 })
 
+test('operand string conditional', t => {
+  const r = queryParser(`hash = 'x' and range = 'y'`)
+
+  t.deepEqual(r, {
+    ExpressionAttributeValues: { ':V1': { S: 'x' }, ':V2': { S: 'y' } },
+    ExpressionAttributeNames: { '#V3': 'hash', '#V4': 'range' },
+    Expression: '#V3 = :V1 and #V4 = :V2'
+  })
+  t.end()
+})
+
 test('operand operator operand conditional', t => {
   const r = queryParser('beep > 10 AND boop = \'barf\'')
 
