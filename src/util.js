@@ -109,15 +109,15 @@ function toJSON (o) {
   return convert(o)
 }
 
-const RE_DIGITS = /([ (=><+-]|BETWEEN|AND)\s*(\d+(\.\d+)?)/g
-const RE_OTHER = /([ (=><+-])\s+(null|true|false)/g
-const RE_PAIRS = /(ADD|REMOVE|DELETE)\s+(\w+\S+)\s+/g
-const RE_BETWEEN = /([^() ]+)\s+BETWEEN\s+/g
-const RE_IN = /([^() ]+)\s+IN\s+/g
-const RE_FUNCTIONS = /(\w+)\((\S+)([,)])/g
-const RE_COMPARATOR = /((?:^)?[^:# ()]+)\s+([=><+-]{1,2})/g
-const RE_BINARY = /(?:<([^ >]+)>)/g
-const RE_STRING = /'((?:[^'\\]|\\.)*)'/g
+const RE_DIGITS = /([ (=><+-]|BETWEEN|AND)\s*(\d+(\.\d+)?)/gm
+const RE_OTHER = /([ (=><+-])\s+(null|true|false)/gm
+const RE_PAIRS = /(ADD|REMOVE|DELETE)\s+(\w+\S+)\s+/gm
+const RE_BETWEEN = /([^() ]+)\s+BETWEEN\s+/gm
+const RE_IN = /([^() ]+)\s+IN\s+/gm
+const RE_FUNCTIONS = /(\w+)\((\S+)([,)])/gm
+const RE_COMPARATOR = /((?:^)?[^:# ()]+)\s+([=><+-]{1,2})/gm
+const RE_BINARY = /(?:<([^ >]+)>)/gm
+const RE_STRING = /'((?:[^'\\]|\\.)*)'/gm
 
 /**
  * Parses source query string into an expression object.
