@@ -196,14 +196,16 @@ export type TableIteratorOptions = Omit<
   'ExpressionAttributeValues'|'ExpressionAttributeNames'|'TableName'
 > & {}
 
+export type ITableIteratorResult<T = any> = ResultSync<{ key: string[], value: T }>
+
 /**
  * An interface for the iterator used by `Table`.
  */
 export interface ITableIterator<T = any> {
-  next(): Promise<{ value: { key: string[], value: T } } | { value: null, done: true }>;
+  next(): Promise<{ value: ITableIteratorResult<T> } | { value: null, done: true }>;
   properties(dsl: string): Promise<void>;
   filter(dsl: string): Promise<void>;
-  [Symbol.asyncIterator]: () => AsyncIterator<ResultSync<T>>;
+  [Symbol.asyncIterator]: () => AsyncIterator<ITableIteratorResult<T>>;
 }
 
 /**
