@@ -200,7 +200,7 @@ export type TableIteratorOptions = Omit<
  * An interface for the iterator used by `Table`.
  */
 export interface ITableIterator<T = any> {
-  next(): Promise<{ value: T } | { value: null, done: true }>;
+  next(): Promise<{ value: { key: string[], value: T } } | { value: null, done: true }>;
   properties(dsl: string): Promise<void>;
   filter(dsl: string): Promise<void>;
   [Symbol.asyncIterator]: () => AsyncIterator<ResultSync<T>>;
