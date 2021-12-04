@@ -75,7 +75,7 @@ class Table {
     /** @type {AWS.DynamoDB.DescribeTimeToLiveOutput} */
     let data = {}
     let isEnabled = false
-    const TableName = /** @type {string} */ (this.meta?.TableName)
+    const TableName = /** @type {string} */ (this.meta && this.meta.TableName)
 
     try {
       data = await this.db.describeTimeToLive({ TableName }).promise()
@@ -219,7 +219,7 @@ class Table {
     const params = {
       Key: this.createKeyProperties(hash, range),
       // @ts-ignore
-      TableName: this.meta?.TableName,
+      TableName: this.meta && this.meta.TableName,
       ExpressionAttributeNames,
       ExpressionAttributeValues,
       UpdateExpression,
@@ -254,7 +254,7 @@ class Table {
     /** @type {AWS.DynamoDB.DescribeTableInput & AWS.DynamoDB.QueryInput & AWS.DynamoDB.ScanInput & { LastEvaluatedKey: AWS.DynamoDB.Key } } */
     const params = {
       // @ts-ignore
-      TableName: this.meta?.TableName,
+      TableName: this.meta && this.meta.TableName,
       ...opts
     }
 
@@ -268,7 +268,7 @@ class Table {
         return { err: /** @type {Error} */ (err) }
       }
 
-      return { data: data?.Table?.ItemCount }
+      return { data: data.Table && data.Table.ItemCount }
     }
 
     params.Select = 'COUNT'
@@ -310,7 +310,7 @@ class Table {
     const params = {
       Key: this.createKeyProperties(hash, range),
       // @ts-ignore
-      TableName: this.meta?.TableName
+      TableName: this.meta && this.meta.TableName
     }
 
     try {
@@ -339,7 +339,7 @@ class Table {
       // @ts-ignore
       Key: this.createKeyProperties(hash, range),
       // @ts-ignore
-      TableName: this.meta?.TableName,
+      TableName: this.meta && this.meta.TableName,
       ...opts
     }
 
@@ -382,7 +382,7 @@ class Table {
         ...this.createKeyProperties(hash, range),
         ...this.disableATD ? props : toDynamoJSON(props)
       },
-      TableName: this.meta?.TableName,
+      TableName: this.meta && this.meta.TableName,
       ...opts
     }
 
@@ -478,7 +478,7 @@ class Table {
     /** @type {AWS.DynamoDB.QueryInput & AWS.DynamoDB.ScanInput} */
     const params = {
       // @ts-ignore
-      TableName: this.meta?.TableName,
+      TableName: this.meta && this.meta.TableName,
       /** @type {AWS.DynamoDB.ExpressionAttributeValueMap} */
       ExpressionAttributeValues,
       /** @type {AWS.DynamoDB.ExpressionAttributeNameMap} */
@@ -511,6 +511,7 @@ class Table {
     const rangeType = this.rangeType
 
     return {
+      // @ts-ignore
       [Symbol.asyncIterator] () {
         return this
       },
@@ -545,7 +546,7 @@ class Table {
           // @ts-ignore
           res = await this.db[method](params).promise()
         } catch (err) {
-          return { value: { err } }
+          return { value: { err: /** @type {Error} */ (err) } }
         }
 
         if (res && res.Items) {

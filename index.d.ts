@@ -4,7 +4,7 @@ import 'aws-sdk'
  * Result containers for async (default) and sync results for
  * `Either<T><{ err: Error }|{ data: T }>` values.
  */
-export type ResultSync<T, E = Error> = { err?: E, data?: T };
+export type ResultSync<T, E = Error> = { err?: E | null, data?: T };
 export type Result<T, E = Error> = Promise<ResultSync<T, E>>;
 
 /**
@@ -202,7 +202,7 @@ export type ITableIteratorResult<T = any> = ResultSync<{ key: string[], value: T
  * An interface for the iterator used by `Table`.
  */
 export interface ITableIterator<T = any> {
-  next(): Promise<{ value: ITableIteratorResult<T> } | { value: null, done: true }>;
+  next(): Promise<{ value: ITableIteratorResult<T> } | { done: true }>;
   properties(dsl: string): Promise<void>;
   filter(dsl: string): Promise<void>;
   [Symbol.asyncIterator]: () => AsyncIterator<ITableIteratorResult<T>>;
