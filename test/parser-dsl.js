@@ -202,6 +202,16 @@ test('multi value set with function', async t => {
   })
 })
 
+test('SET with negative number', t => {
+  const r = queryParser('SET count = if_not_exists(count, 0) - 1')
+
+  t.deepEqual(r, {
+    ExpressionAttributeValues: { ':V1': { N: '0' }, ':V2': { N: '1' } },
+    ExpressionAttributeNames: { '#V3': 'count', '#V4': 'count' },
+    Expression: 'SET #V4 = if_not_exists(#V3, :V1) - :V2'
+  })
+})
+
 test('is null value', async t => {
   const r = queryParser('foo = null')
 

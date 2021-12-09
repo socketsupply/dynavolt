@@ -24,24 +24,6 @@ let db = null
 /** @type {import('../src/table').Table} */
 let table = null
 
-const reset = async t => {
-  try {
-    await _dynamo.deleteTable({ TableName: TEST_TABLE }).promise()
-  } catch (err) {
-    if (err.name !== 'ResourceNotFoundException') {
-      t.fail(err.message)
-    }
-  }
-
-  try {
-    await _dynamo.deleteTable({ TableName: TEST_NOT_EXISTS_TABLE }).promise()
-  } catch (err) {
-    if (err.name !== 'ResourceNotFoundException') {
-      t.fail(err.message)
-    }
-  }
-}
-
 test('create database instance', t => {
   db = new Dynavolt(AWS.DynamoDB, TEST_CONFIG)
   t.ok(db.open, 'has open method')
@@ -326,4 +308,66 @@ test('query that returns nothing', async t => {
   t.equal(count, 0)
 })
 
-test('remote teardown', reset)
+test('update counter by 3', async (t) => {
+  const rowId = uuid()
+
+  const { err, data } = await table.update(
+    'tickets', rowId,
+    `SET count = if_not_exists(count, 0) + ${3}`
+  )
+
+  t.ifError(err)
+  t.ok(data)
+  t.equal(data.count, 3)
+
+  {
+    const { err, data } = await table.get('tickets', rowId)
+    t.ifError(err)
+    t.deepEqual({
+      range: rowId,
+      hash: 'tickets',
+      count: 3
+    }, data)
+  }
+})
+
+test('update counter by -3', async (t) => {
+  const rowId = uuid()
+
+  const { err, data } = await table.update(
+    'tickets', rowId,
+    `SET count = if_not_exists(count, 0) - ${3}`
+  )
+
+  t.ifError(err)
+  t.ok(data)
+  t.equal(data.count, -3)
+
+  {
+    const { err, data } = await table.get('tickets', rowId)
+    t.ifError(err)
+    t.deepEqual({
+      range: rowId,
+      hash: 'tickets',
+      count: -3
+    }, data)
+  }
+})
+
+test('remote teardown', async (t) => {
+  try {
+    await _dynamo.deleteTable({ TableName: TEST_TABLE }).promise()
+  } catch (err) {
+    if (err.name !== 'ResourceNotFoundException') {
+      t.fail(err.message)
+    }
+  }
+
+  try {
+    await _dynamo.deleteTable({ TableName: TEST_NOT_EXISTS_TABLE }).promise()
+  } catch (err) {
+    if (err.name !== 'ResourceNotFoundException') {
+      t.fail(err.message)
+    }
+  }
+})
