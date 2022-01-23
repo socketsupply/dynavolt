@@ -51,9 +51,28 @@ test('operand < operand', async t => {
   })
 })
 
+test('`escaped operand` > constant', async t => {
+  const r = queryParser('`escaped value` > 10')
+
+  t.deepEqual(r, {
+    ExpressionAttributeValues: { ':V2': { N: '10' } },
+    ExpressionAttributeNames: { '#V1': 'escaped value' },
+    Expression: '#V1 > :V2'
+  })
+})
+
+test('"escaped operand" > constant', async t => {
+  const r = queryParser('"escaped value" > 10')
+
+  t.deepEqual(r, {
+    ExpressionAttributeValues: { ':V2': { N: '10' } },
+    ExpressionAttributeNames: { '#V1': 'escaped value' },
+    Expression: '#V1 > :V2'
+  })
+})
+
 test('path', async t => {
   const r = queryParser('foo.bar = \'bazz\'')
-  console.log(r)
 
   t.deepEqual(r, {
     ExpressionAttributeValues: { ':V1': { S: 'bazz' } },

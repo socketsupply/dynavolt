@@ -115,7 +115,7 @@ const RE_PAIRS = /(ADD|REMOVE|DELETE)\s+(\w+\S+)\s+/gm
 const RE_BETWEEN = /([^() ]+)\s+BETWEEN\s+/gm
 const RE_IN = /([^() ]+)\s+IN\s+/gm
 const RE_FUNCTIONS = /(\w+)\((\S+)([,)])/gm
-const RE_COMPARATOR = /((?:^)?[^:# ()]+)\s+([=><+-]{1,2})/gm
+const RE_COMPARATOR = /((?:^)?[^\s()]+)\s+([=><+-]{1,2})/gm
 const RE_BINARY = /(?:<([^ >]+)>)/gm
 const RE_STRING = /'((?:[^'\\]|\\.)*)'/gm
 
@@ -150,13 +150,23 @@ function queryParser (source) {
   // could be supported if quoted.
   //
   /** @type {(s: string) => string} */
-  const createPath = s => s.split('.').map((/** @type {string} */ str) => {
-    const parts = str.split('[')
-    variableIndex++
-    const id = `#V${variableIndex}`
-    ExpressionAttributeNames[id] = parts[0].trim()
-    return id + (parts[1] ? '[' + parts[1] : '')
-  }).join('.')
+  const createPath = s => {
+    if (/^[#:]/.test(s.trim())) {
+      return s
+    }
+
+    return s.split('.').map((/** @type {string} */ str) => {
+      const parts = str.split('[')
+      variableIndex++
+      const id = `#V${variableIndex}`
+      ExpressionAttributeNames[id] = parts[0].trim().replace(/^`/, '').replace(/`$/, '')
+      return id + (parts[1] ? '[' + parts[1] : '')
+    }).join('.')
+  }
+
+  source = source.replace(/[`|"]([^`"]+)["|`]\s*([=<>!]+)/gm, (_, v, op) => {
+    return `${createPath(v)} ${op || ''}`.trim()
+  })
 
   //
   // Identify strings first, since they can include subsequences
