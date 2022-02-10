@@ -441,7 +441,7 @@ export class Table implements ITable {
   ): TableKeyProperties;
 }
 
-declare module "@operatortc/dynavolt" {
+declare module "@socketsupply/dynavolt" {
   export = Database;
 }
 

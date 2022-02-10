@@ -1,5 +1,5 @@
 {
-  "name": "@operatortc/dynavolt",
+  "name": "@socketsupply/dynavolt",
   "version": "2.1.10",
   "description": "",
   "main": "./src/index.js",
@@ -13,14 +13,14 @@
   "typings": "index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/operatortc/dynavolt.git"
+    "url": "git+https://github.com/socketsupply/dynavolt.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/operatortc/dynavolt/issues"
+    "url": "https://github.com/socketsupply/dynavolt/issues"
   },
-  "homepage": "https://github.com/operatortc/dynavolt#readme",
+  "homepage": "https://github.com/socketsupply/dynavolt#readme",
   "binDependencies": {
     "standard": "14.3.1"
   },
