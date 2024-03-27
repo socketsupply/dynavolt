@@ -1,63 +1,66 @@
 // @ts-check
 'use strict'
+import fs from 'node:fs'
+import { test } from 'node:test'
+import * as assert from 'node:assert'
+import { v4 as uuidv4 } from 'uuid'
 
-const AWS = require('aws-sdk')
-const { test } = require('tapzero')
-const uuid = require('uuid').v4
+import Dynavolt from '../src/index.js'
 
-const Dynavolt = require('../src')
+import {
+  DynamoDBClient,
+  DeleteTableCommand
+} from '@aws-sdk/client-dynamodb'
+
+import './parser-objects.js'
+import './parser-dsl.js'
 
 const TEST_CONFIG = { region: 'us-west-2' }
 
 // const testid = 'temp'
-const testid = uuid()
+const testid = uuidv4()
 const TEST_TABLE = `test_${testid}`
 const TEST_NOT_EXISTS_TABLE = `test-create-if-not-exists_${testid}`
 
-require('./parser-objects')
-require('./parser-dsl')
+const _dynamo = new DynamoDBClient(TEST_CONFIG)
 
-const _dynamo = new AWS.DynamoDB(TEST_CONFIG)
-
-/** @type {Dynavolt} */
 let db = null
-/** @type {import('../src/table').Table} */
 let table = null
 
 test('create database instance', t => {
-  db = new Dynavolt(AWS.DynamoDB, TEST_CONFIG)
-  t.ok(db.open, 'has open method')
-  t.ok(db.create, 'has create method')
+  db = new Dynavolt(TEST_CONFIG)
+  assert.ok(db.open, 'has open method')
+  assert.ok(db.create, 'has create method')
 })
 
 test('create a table', async t => {
-  t.comment('create a table started')
+  console.log('create a table started')
   const { err } = await db.create(TEST_TABLE)
-  t.comment('table created succeeded')
-  t.ok(!err, err ? err.message : 'the table was created')
+  console.log('table created succeeded')
+  assert.ok(!err, err ? err.message : 'the table was created')
 })
 
 test('open a table', async t => {
   const { err, data: _table } = await db.open(TEST_TABLE)
-  t.ok(!err, err && err.message)
+  assert.ok(!err, err && err.message)
 
   table = _table
-  t.ok(table, 'the table was opened')
+  assert.ok(table, 'the table was opened')
 })
 
 // test('open a table that does not exist', async t => {
 //   const { err, data: _table } = await db.open(TEST_NOT_EXISTS_TABLE, {
 //     create: true
 //   })
-//   t.ok(!err, err && err.message)
-//   t.ok(_table.db, 'underlying database created and opened')
+//   assert.ok(!err, err && err.message)
+//   assert.ok(_table.db, 'underlying database created and opened')
 //
 // })
 
 test('put', async t => {
   const { err } = await table.put('oregon', 'salem', { donuts: true })
 
-  t.ok(!err, err && err.message)
+  assert.ok(!err, err && err.message)
 })
 
 test('put complex', async t => {
@@ -69,62 +72,63 @@ test('put complex', async t => {
     n: 100
   })
 
-  t.ok(!err, err && err.message)
+  assert.ok(!err, err && err.message)
 })
 
 test('put more complex', async t => {
   // @ts-ignore
-  const { err } = await table.put('oregon', 'bend', require('./fixture.json'))
+  const json = JSON.parse(await fs.promises.readFile('./test/fixture.json', 'utf8'))
+  const { err } = await table.put('oregon', 'bend', json)
 
-  t.ok(!err, err && err.message)
+  assert.ok(!err, err && err.message)
 })
 
 test('get', async t => {
   const { err, data } = await table.get('oregon', 'salem')
 
-  t.ok(!err, err && err.message)
-  t.ok(data.donuts === true, 'there are donuts in salem oregon')
+  assert.ok(!err, err && err.message)
+  assert.ok(data.donuts === true, 'there are donuts in salem oregon')
 })
 
 test('update a value', async t => {
   const { err: errUpdate } = await table.update('oregon', 'salem', 'SET donuts = false')
-  t.ok(!errUpdate, errUpdate && errUpdate.message)
+  assert.ok(!errUpdate, errUpdate && errUpdate.message)
 
   const { err: errGet, data } = await table.get('oregon', 'salem')
-  t.ok(!errGet, errGet && errGet.message)
+  assert.ok(!errGet, errGet && errGet.message)
 
-  t.ok(data.donuts === false, 'there are donuts in salem oregon')
+  assert.ok(data.donuts === false, 'there are donuts in salem oregon')
 })
 
 test('get a value that does not exist', async t => {
   const { err, data } = await table.get('oregon', 'witches')
 
-  t.ok(err.notFound, 'not found')
-  t.ok(!data, 'there are not witches in oregon')
+  assert.ok(err.notFound, 'not found')
+  assert.ok(!data, 'there are not witches in oregon')
 })
 
 test('put if not exists', async t => {
   const { err } = await table.putNew('oregon', 'salem', { donuts: true })
 
-  t.ok(err.exists, 'exits')
+  assert.ok(err.exists, 'exits')
 })
 
 test('delete and verify its been remove', async t => {
   {
     const { err } = await table.delete('oregon', 'salem')
-    t.ok(!err, err && err.message)
+    assert.ok(!err, err && err.message)
   }
 
   {
     const { err, data } = await table.get('oregon', 'salem')
-    t.ok(err.notFound)
-    t.ok(!data)
+    assert.ok(err.notFound)
+    assert.ok(!data)
   }
 })
 
 test('delete a key that does not exist', async t => {
   const { err } = await table.get('foo', 'bar')
-  t.ok(err.notFound)
+  assert.ok(err.notFound)
 })
 
 test('batch write', async t => {
@@ -137,7 +141,7 @@ test('batch write', async t => {
   ]
 
   const { err } = await table.batchWrite(ops)
-  t.ok(!err, err && err.message)
+  assert.ok(!err, err && err.message)
 })
 
 test('batch read', async t => {
@@ -150,9 +154,9 @@ test('batch read', async t => {
   ]
 
   const { err, data } = await table.batchRead(ops)
-  t.ok(!err, err && err.message)
-  t.ok(Array.isArray(data), 'got an array of values')
-  t.ok(data.length === 5, 'correct number of items')
+  assert.ok(!err, err && err.message)
+  assert.ok(Array.isArray(data), 'got an array of values')
+  assert.ok(data.length === 5, 'correct number of items')
 })
 
 test('batch write with deletes', async t => {
@@ -168,16 +172,16 @@ test('batch write with deletes', async t => {
   ]
 
   const { errBatch } = await table.batchWrite(ops)
-  t.ok(!errBatch, errBatch && errBatch.message)
+  assert.ok(!errBatch, errBatch && errBatch.message)
 
   const { err: errGet } = await table.get('b', 'b')
-  t.ok(errGet.notFound, 'the record was removed')
+  assert.ok(errGet.notFound, 'the record was removed')
 })
 
 test('count all rows', async t => {
   const { err, data } = await table.count(true)
-  t.ok(!err, err && err.message)
-  t.equal(data, 9, 'count is correct')
+  assert.ok(!err, err && err.message)
+  assert.equal(data, 9, 'count is correct')
 })
 
 test('full table scan', async t => {
@@ -189,11 +193,11 @@ test('full table scan', async t => {
     const { key, value } = data
     count++
 
-    t.ok(key)
-    t.equal(typeof value, 'object')
+    assert.ok(key)
+    assert.equal(typeof value, 'object')
   }
 
-  t.equal(count, 9)
+  assert.equal(count, 9)
 })
 
 test('table scan from offset', async t => {
@@ -212,20 +216,20 @@ test('table scan from offset', async t => {
 
     count++
 
-    t.ok(key)
-    t.equal(typeof value, 'object')
+    assert.ok(key)
+    assert.equal(typeof value, 'object')
 
     values.push({ key, value })
   }
 
-  t.deepEqual(values, [
+  assert.deepEqual(values, [
     { key: ['b', 'a'], value: { value: 3 } },
     { key: ['b', 'c'], value: { value: 3 } },
     { key: ['b', 'd'], value: { value: 3 } },
     { key: ['b', 'e'], value: { value: 3 } }
   ])
 
-  t.equal(count, 4)
+  assert.equal(count, 4)
 })
 
 test('scanning a chat/ts style range', async t => {
@@ -236,7 +240,7 @@ test('scanning a chat/ts style range', async t => {
   ]
 
   const { errBatch } = await table.batchWrite(ops)
-  t.ok(!errBatch, errBatch && errBatch.message)
+  assert.ok(!errBatch, errBatch && errBatch.message)
 
   const itr = table.scan('hash = \'chat\' AND range > \'1628678141934\'')
 
@@ -252,14 +256,14 @@ test('scanning a chat/ts style range', async t => {
 
     count++
 
-    t.ok(key)
-    t.equal(typeof value, 'object')
+    assert.ok(key)
+    assert.equal(typeof value, 'object')
 
     values.push({ key, value })
   }
 
-  t.equal(count, 2)
-  t.deepEqual(values, [
+  assert.equal(count, 2)
+  assert.deepEqual(values, [
     { key: ['chat', '1628678141935'], value: { value: 3 } },
     { key: ['chat', '1628678141937'], value: { value: 3 } }
   ])
@@ -273,11 +277,11 @@ test('query', async t => {
   for await (const { data } of itr) {
     const { key, value } = data
     count++
-    t.ok(key.length === 2)
-    t.ok(typeof value === 'object')
+    assert.ok(key.length === 2)
+    assert.ok(typeof value === 'object')
   }
 
-  t.ok(count === 4)
+  assert.ok(count === 4)
 })
 
 test('query with a limit (native parameters)', async t => {
@@ -288,11 +292,11 @@ test('query with a limit (native parameters)', async t => {
   for await (const { data } of itr) {
     const { key, value } = data
     count++
-    t.ok(key.length === 2)
-    t.ok(typeof value === 'object')
+    assert.ok(key.length === 2)
+    assert.ok(typeof value === 'object')
   }
 
-  t.ok(count === 3)
+  assert.ok(count === 3)
 })
 
 test('query that returns nothing', async t => {
@@ -302,28 +306,28 @@ test('query that returns nothing', async t => {
 
   for await (const { err, data } of itr) {
     count++
-    t.ok(err && data)
+    assert.ok(err && data)
   }
 
-  t.equal(count, 0)
+  assert.equal(count, 0)
 })
 
 test('update counter by 3', async (t) => {
-  const rowId = uuid()
+  const rowId = uuidv4()
 
   const { err, data } = await table.update(
     'tickets', rowId,
     `SET count = if_not_exists(count, 0) + ${3}`
   )
 
-  t.ifError(err)
-  t.ok(data)
-  t.equal(data.count, 3)
+  assert.ifError(err)
+  assert.ok(data)
+  assert.equal(data.count, 3)
 
   {
     const { err, data } = await table.get('tickets', rowId)
-    t.ifError(err)
-    t.deepEqual({
+    assert.ifError(err)
+    assert.deepEqual({
       range: rowId,
       hash: 'tickets',
       count: 3
@@ -332,21 +336,21 @@ test('update counter by 3', async (t) => {
 })
 
 test('update counter by -3', async (t) => {
-  const rowId = uuid()
+  const rowId = uuidv4()
 
   const { err, data } = await table.update(
     'tickets', rowId,
     `SET count = if_not_exists(count, 0) - ${3}`
   )
 
-  t.ifError(err)
-  t.ok(data)
-  t.equal(data.count, -3)
+  assert.ifError(err)
+  assert.ok(data)
+  assert.equal(data.count, -3)
 
   {
     const { err, data } = await table.get('tickets', rowId)
-    t.ifError(err)
-    t.deepEqual({
+    assert.ifError(err)
+    assert.deepEqual({
       range: rowId,
       hash: 'tickets',
       count: -3
@@ -356,18 +360,18 @@ test('update counter by -3', async (t) => {
 
 test('remote teardown', async (t) => {
   try {
-    await _dynamo.deleteTable({ TableName: TEST_TABLE }).promise()
+    await _dynamo.send(new DeleteTableCommand({ TableName: TEST_TABLE }))
   } catch (err) {
     if (err.name !== 'ResourceNotFoundException') {
-      t.fail(err.message)
+      assert.fail(err.message)
     }
   }
 
   try {
-    await _dynamo.deleteTable({ TableName: TEST_NOT_EXISTS_TABLE }).promise()
+    await _dynamo.send(new DeleteTableCommand({ TableName: TEST_NOT_EXISTS_TABLE }))
   } catch (err) {
     if (err.name !== 'ResourceNotFoundException') {
-      t.fail(err.message)
+      assert.fail(err.message)
     }
   }
 })

@@ -1,17 +1,12 @@
 # SYNOPSIS
-A nice DynamoDB client.
+A highly opinionated DynamoDB client for aws-sdk v3 using esm.
 
 # USAGE
 
 ```js
-const Dynavolt = require('dynavolt')
-const DynamoDB = require('aws-sdk/clients/dynamodb')
-const db = new Dynavolt(DynamoDB, { region: 'us-west-2' })
+import Dynavolt from 'dynavolt'
+const db = new Dynavolt({ region: 'us-west-2' })
 ```
-
-you must pass in the `DynamoDB` constructor from the `aws-sdk`.
-It is recommended to access it by `require('aws-sdk/clients/dynamodb')` to avoid loading
-the all the other apis you do not need.
 
 ## TABLES
 

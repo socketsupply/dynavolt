@@ -1,50 +1,34 @@
 // @ts-check
 'use strict'
 
-const { queryParser, toJSON, toDynamoJSON } = require('./util')
+import {
+  BatchGetItemCommand,
+  BatchWriteItemCommand,
+  DeleteItemCommand,
+  DescribeTableCommand,
+  DescribeTimeToLiveCommand,
+  DynamoDBClient,
+  GetItemCommand,
+  PutItemCommand,
+  QueryCommand,
+  ScanCommand,
+  UpdateItemCommand,
+  UpdateTimeToLiveCommand
+} from '@aws-sdk/client-dynamodb'
 
-/**
- * A high level container for a DynamoDB database table.
- * @extends {dynavolt.Table}
- * @implements {dynavolt.ITable}
- */
+import { queryParser, toJSON, toDynamoJSON } from './util.js'
+
 class Table {
-  /**
-   * `Table` class constructor.
-   * @param {dynavolt.Constructors.DynamoDB} DynamoDB
-   * @param {AWS.DynamoDB.Types.ClientConfiguration} [dbOpts]
-   * @param {dynavolt.TableOptions} [opts]
-   */
-  constructor (DynamoDB, dbOpts = {}, opts = {}) {
-    /** @type {boolean} */
+  constructor (db, dbOpts = {}, opts = {}) {
     this.disableATD = Boolean(opts.disableATD)
-
-    /** @type {string?} */
     this.rangeType = null
-
-    /** @type {string?} */
     this.hashType = null
-
-    /** @type {string?} */
     this.rangeKey = null
-
-    /** @type {string?} */
     this.hashKey = null
-
-    /** @type {AWS.DynamoDB.TableDescription?} */
     this.meta = null
-
-    /** @type {AWS.DynamoDB} */
-    this.db = new DynamoDB({ ...dbOpts, ...opts })
+    this.db = db || new DynamoDBClient({ ...dbOpts, ...opts })
   }
 
-  /**
-   * Creates a key properties object for a given `hash` and `range`.
-   * This function is used internally.
-   * @param {string} hash
-   * @param {string} range
-   * @return {dynavolt.TableKeyProperties}
-   */
   createKeyProperties (hash, range) {
     if (!this.hashKey || !this.hashType || !this.rangeKey || !this.rangeType) {
       return {}
@@ -72,13 +56,12 @@ class Table {
       return { err: new Error('No table open') }
     }
 
-    /** @type {AWS.DynamoDB.DescribeTimeToLiveOutput} */
     let data = {}
     let isEnabled = false
     const TableName = /** @type {string} */ (this.meta && this.meta.TableName)
 
     try {
-      data = await this.db.describeTimeToLive({ TableName }).promise()
+      data = await this.db.send(new DescribeTimeToLiveCommand({ TableName }))
 
       isEnabled = Boolean(
         data.TimeToLiveDescription &&
@@ -86,7 +69,7 @@ class Table {
         data.TimeToLiveDescription.TimeToLiveStatus === 'ENABLED'
       )
     } catch (err) {
-      return { err: /** @type {Error} */ (err) }
+      return { err }
     }
 
     if (isEnabled && Enabled) {
@@ -94,7 +77,6 @@ class Table {
       return { data: this }
     }
 
-    /** @type {AWS.DynamoDB.Types.UpdateTimeToLiveInput} */
     const params = {
       // @ts-ignore
       TableName,
@@ -105,9 +87,9 @@ class Table {
     }
 
     try {
-      await this.db.updateTimeToLive(params).promise()
+      await this.db.send(new UpdateTimeToLiveCommand(params))
     } catch (err) {
-      return { err: /** @type {Error} */ (err) }
+      return { err }
     }
 
     // @ts-ignore
@@ -116,9 +98,6 @@ class Table {
 
   /**
    * Performs a batch write.
-   * @param {dynavolt.TableBatchWriteInput} batch
-   * @param {dynavolt.TableBatchWriteOptions} [opts]
-   * @return {dynavolt.Result<void>}
    */
   async batchWrite (batch, opts = {}) {
     // @ts-ignore
@@ -151,9 +130,9 @@ class Table {
       }
 
       try {
-        await this.db.batchWriteItem(params).promise()
+        await this.db.send(new BatchWriteItemCommand(params))
       } catch (err) {
-        return { err: /** @type {Error} */ (err) }
+        return { err }
       }
     }
 
@@ -162,15 +141,12 @@ class Table {
 
   /**
    * Performs a batch read.
-   * @param {dynavolt.TableBatchReadInput} batch
-   * @param {dynavolt.TableBatchReadOptions} [opts]
-   * @return {dynavolt.Result<AWS.DynamoDB.ItemList>}
    */
   async batchRead (batch, opts = {}) {
     // @ts-ignore
     const { TableName } = this.meta
 
-    /** @type {AWS.DynamoDB.Types.BatchGetItemInput} */
+    /** @type {AWS.CTOR.Types.BatchGetItemInput} */
     const params = {
       RequestItems: {
         [TableName]: {
@@ -183,13 +159,13 @@ class Table {
       ...opts
     }
 
-    /** @type {AWS.DynamoDB.Types.BatchGetItemOutput} */
+    /** @type {AWS.CTOR.Types.BatchGetItemOutput} */
     let data = {}
 
     try {
-      data = await this.db.batchGetItem(params).promise()
+      data = await this.db.send(new BatchGetItemCommand(params))
     } catch (err) {
-      return { err: /** @type {Error} */ (err) }
+      return { err }
     }
 
     return { data: data.Responses && data.Responses[TableName] }
@@ -201,7 +177,7 @@ class Table {
    * @param {dynavolt.Types.Range} range
    * @param {dynavolt.Types.Query} dsl
    * @param {dynavolt.TableUpdateOptions} [opts]
-   * @return {dynavolt.Result<AWS.DynamoDB.AttributeMap>}
+   * @return {dynavolt.Result<AWS.CTOR.AttributeMap>}
    */
   async update (hash, range, dsl, opts = {}) {
     if (typeof dsl === 'object') {
@@ -215,7 +191,7 @@ class Table {
       Expression: UpdateExpression
     } = queryParser(dsl)
 
-    /** @type {AWS.DynamoDB.UpdateItemInput} */
+    /** @type {AWS.CTOR.UpdateItemInput} */
     const params = {
       Key: this.createKeyProperties(hash, range),
       // @ts-ignore
@@ -227,12 +203,12 @@ class Table {
       ...opts
     }
 
-    /** @type {AWS.DynamoDB.UpdateItemOutput?} */
+    /** @type {AWS.CTOR.UpdateItemOutput?} */
     let data = null
     try {
-      data = await this.db.updateItem(params).promise()
+      data = await this.db.send(new UpdateItemCommand(params))
     } catch (err) {
-      return { err: /** @type {Error} */ (err) }
+      return { err }
     }
 
     if (!data.Attributes) {
@@ -240,7 +216,7 @@ class Table {
     }
 
     return {
-      data: /** @type {AWS.DynamoDB.AttributeMap} */ (toJSON(data.Attributes))
+      data: /** @type {AWS.CTOR.AttributeMap} */ (toJSON(data.Attributes))
     }
   }
 
@@ -251,7 +227,6 @@ class Table {
    * @return {dynavolt.TableCountResult}
    */
   async count (isManualCount, opts) {
-    /** @type {AWS.DynamoDB.DescribeTableInput & AWS.DynamoDB.QueryInput & AWS.DynamoDB.ScanInput & { LastEvaluatedKey: AWS.DynamoDB.Key } } */
     const params = {
       // @ts-ignore
       TableName: this.meta && this.meta.TableName,
@@ -259,13 +234,12 @@ class Table {
     }
 
     if (!isManualCount) {
-      /** @type {AWS.DynamoDB.Types.DescribeTableOutput} */
       let data = {}
 
       try {
-        data = await this.db.describeTable(params).promise()
+        data = await this.db.send(new DescribeTableCommand(params))
       } catch (err) {
-        return { err: /** @type {Error} */ (err) }
+        return { err }
       }
 
       return { data: data.Table && data.Table.ItemCount }
@@ -276,13 +250,12 @@ class Table {
     let count = 0
 
     while (true) {
-      /** @type {AWS.DynamoDB.ScanOutput?} */
       let data = null
 
       try {
-        data = await this.db.scan(params).promise()
+        data = await this.db.send(new ScanCommand(params))
       } catch (err) {
-        return { err: /** @type {Error} */ (err) }
+        return { err }
       }
 
       if (data.Count) {
@@ -306,7 +279,7 @@ class Table {
    * @return {dynavolt.Result<void>}
    */
   async delete (hash, range) {
-    /** @type {AWS.DynamoDB.DeleteItemInput} */
+    /** @type {AWS.CTOR.DeleteItemInput} */
     const params = {
       Key: this.createKeyProperties(hash, range),
       // @ts-ignore
@@ -314,9 +287,9 @@ class Table {
     }
 
     try {
-      await this.db.deleteItem(params).promise()
+      await this.db.send(new DeleteItemCommand(params))
     } catch (err) {
-      return { err: /** @type {Error} */ (err) }
+      return { err }
     }
 
     return {}
@@ -334,7 +307,6 @@ class Table {
       opts = range || {}
     }
 
-    /** @type {AWS.DynamoDB.Types.GetItemInput} */
     const params = {
       // @ts-ignore
       Key: this.createKeyProperties(hash, range),
@@ -346,17 +318,15 @@ class Table {
     let data = null
 
     try {
-      data = await this.db.getItem(params).promise()
+      data = await this.db.send(new GetItemCommand(params))
     } catch (err) {
-      return {
-        err: /** @type {Error} */ (err)
-      }
+      return { err }
     }
 
     if (!data.Item) {
       const err = new Error('Key not found in database')
       Object.assign(err, { notFound: true })
-      return { err: err }
+      return { err }
     }
 
     return { data: toJSON(data.Item) }
@@ -388,7 +358,7 @@ class Table {
 
     try {
       // @ts-ignore
-      await this.db.putItem(params).promise()
+      await this.db.send(new PutItemCommand(params))
     } catch (err) {
       if (err instanceof Error && err.message === 'The conditional request failed') {
         return {
@@ -396,7 +366,7 @@ class Table {
         }
       }
 
-      return { err: /** @type {Error} */ (err) }
+      return { err }
     }
 
     return {}
@@ -475,13 +445,13 @@ class Table {
       throw new Error('Query is empty')
     }
 
-    /** @type {AWS.DynamoDB.QueryInput & AWS.DynamoDB.ScanInput} */
+    /** @type {AWS.CTOR.QueryInput & AWS.CTOR.ScanInput} */
     const params = {
       // @ts-ignore
       TableName: this.meta && this.meta.TableName,
-      /** @type {AWS.DynamoDB.ExpressionAttributeValueMap} */
+      /** @type {AWS.CTOR.ExpressionAttributeValueMap} */
       ExpressionAttributeValues,
-      /** @type {AWS.DynamoDB.ExpressionAttributeNameMap} */
+      /** @type {AWS.CTOR.ExpressionAttributeNameMap} */
       ExpressionAttributeNames,
       ...opts
     }
@@ -500,7 +470,7 @@ class Table {
       }
     }
 
-    /** @type {Array<{ data: { key: Array<string>, value: AWS.DynamoDB.AttributeMap } } >} */
+    /** @type {Array<{ data: { key: Array<string>, value: AWS.CTOR.AttributeMap } } >} */
     let values = []
     let iteratorIndex = 0
     let isFinished = false
@@ -539,14 +509,15 @@ class Table {
           return { done: true }
         }
 
-        /** @type {AWS.DynamoDB.QueryOutput|AWS.DynamoDB.ScanOutput?} */
+        /** @type {AWS.CTOR.QueryOutput|AWS.CTOR.ScanOutput?} */
         let res = null
 
         try {
           // @ts-ignore
-          res = await this.db[method](params).promise()
+          const Ctor = method === 'query' ? QueryCommand : ScanCommand
+          res = await this.db.send(new Ctor(params))
         } catch (err) {
-          return { value: { err: /** @type {Error} */ (err) } }
+          return { value: { err } }
         }
 
         if (res && res.Items) {
@@ -592,7 +563,7 @@ class Table {
   }
 }
 
-module.exports = { Table }
+export { Table }
 
 /**
  * Returns true if a given object is empty (or `null`), otherwise `false`.

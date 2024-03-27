@@ -1,10 +1,17 @@
 // @ts-check
 'use strict'
 
-const assert = require('assert')
+import assert from 'assert'
 
-const { Table } = require('./table')
-const { getDynamoDataType } = require('./util')
+import { Table } from './table.js'
+import { getDynamoDataType } from './util.js'
+
+import {
+  CreateTableCommand,
+  DescribeTableCommand,
+  DynamoDBClient,
+  waitForTableExists
+} from '@aws-sdk/client-dynamodb'
 
 /**
  * A high level container for a DynamoDB database.
@@ -24,28 +31,11 @@ class Database {
 
   /**
    * `Database` class constructor.
-   * @constructor
-   * @param {dynavolt.DatabaseDynamoDBOption} DynamoDB
    * @param {dynavolt.DatabaseOptions} [opts]
    */
-  constructor (DynamoDB, opts = {}) {
-    assert(
-      typeof DynamoDB === 'function' ||
-      (DynamoDB && typeof DynamoDB.DynamoDB === 'function'),
-      'the first argument must be a reference to the DynamoDB constructor'
-    )
-
-    // @ts-ignore
-    if (DynamoDB && typeof DynamoDB.DynamoDB === 'function') {
-      // @ts-ignore
-      DynamoDB = DynamoDB.DynamoDB
-    }
-
-    // hold onto this so the Table class can use it too
-    this.DynamoDB = /** @type {dynavolt.Constructors.DynamoDB} */ (DynamoDB)
-
+  constructor (opts = {}) {
     /** @type {AWS.DynamoDB} */
-    this.db = new this.DynamoDB(opts)
+    this.db = new DynamoDBClient(opts)
 
     /** @type {dynavolt.DatabaseOptions} */
     this.opts = opts || {}
@@ -70,11 +60,11 @@ class Database {
     }
 
     /** @type {dynavolt.ITable} */
-    const table = new Table(this.DynamoDB, this.opts, opts)
+    const table = new Table(this.db, this.opts, opts)
     this.tables[TableName] = table
 
     try {
-      const result = await this.db.describeTable({ TableName }).promise()
+      const result = await this.db.send(new DescribeTableCommand({ TableName }))
       table.meta = result.Table || null
     } catch (err) {
       if (err instanceof Error && err.name !== 'ResourceNotFoundException') {
@@ -82,7 +72,7 @@ class Database {
       }
 
       if (!opts.create) {
-        return { err: /** @type {Error} */ (err) }
+        return { err }
       }
 
       const { err: errCreate } = await this.create(TableName)
@@ -182,15 +172,15 @@ class Database {
     Object.assign(params, opts)
 
     try {
-      await this.db.createTable(params).promise()
+      await this.db.send(new CreateTableCommand(params))
     } catch (err) {
-      return { err: /** @type {Error} */ (err) }
+      return { err }
     }
 
     try {
-      await this.db.waitFor('tableExists', { TableName }).promise()
+      await waitForTableExists({ client: this.db, maxWaitTime: 120 }, { TableName })
     } catch (err) {
-      return { err: /** @type {Error} */ (err) }
+      return { err }
     }
 
     while (true) {
@@ -198,9 +188,9 @@ class Database {
       let data = {}
 
       try {
-        data = await this.db.describeTable({ TableName }).promise()
+        data = await this.db.send(new DescribeTableCommand({ TableName }))
       } catch (err) {
-        return { err: /** @type {Error} */ (err) }
+        return { err }
       }
 
       if (data.Table && data.Table.TableStatus !== 'ACTIVE') {
@@ -215,9 +205,8 @@ class Database {
   }
 }
 
-module.exports = Database
-module.exports.default = Database
-module.exports.Database = Database
+export { Database }
+export default Database
 
 /**
  * Waits `n` milliseconds before resolving.

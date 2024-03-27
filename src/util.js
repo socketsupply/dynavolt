@@ -253,7 +253,7 @@ function queryParser (source) {
   }
 }
 
-module.exports = {
+export {
   queryParser,
   getDataType,
   getDynamoDataType,
