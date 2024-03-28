@@ -16,12 +16,12 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: 14.x
+        node-version: 20.x
     - name: npm install
-      run: npm install && ./node_modules/.bin/npr which standardx
+      run: npm install
     - name: npm test
-      run: ./node_modules/.bin/npr standard && node ./test
+      run: standard && node ./test
       env:
         CI: true
-        AWS_ACCESS_KEY_ID: ${{ secrets.TEST_OPTOOLCO3_ACCESS_KEY }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.TEST_OPTOOLCO3_SECRET_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.DEVOPS_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.DEVOPS_SECRET_KEY }}
